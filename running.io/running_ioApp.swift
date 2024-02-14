@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct running_ioApp: App {
+    @StateObject private var locationManager = LocationManager()
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(locationManager)
         }
     }
 }
