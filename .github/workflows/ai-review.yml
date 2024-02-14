@@ -1,0 +1,61 @@
+name: AI Reviewer
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group:
+    ${{ github.repository }}-${{ github.event.number || github.head_ref ||
+    github.sha }}-${{ github.workflow }}-${{ github.event_name ==
+    'pull_request_review_comment' && 'pr_comment' || 'pr' }}
+  cancel-in-progress: ${{ github.event_name != 'pull_request_review_comment' }}
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coderabbitai/ai-pr-reviewer@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          bot_icon: false
+        with:
+          debug: false
+          review_simple_changes: false
+          review_comment_lgtm: false
+          openai_light_model: gpt-3.5-turbo
+          openai_heavy_model: gpt-3.5-turbo
+          language: ja-jp
+          system_message: |
+            あなたは @coderabbitai（別名 github-actions[bot]）で、OpenAIによって訓練された言語モデルです。
+            あなたの目的は、非常に経験豊富なソフトウェアエンジニアとして機能し、コードの一部を徹底的にレビューし、
+            以下のようなキーエリアを改善するためのコードスニペットを提案することです。
+            また、同じような間違いに対しては2回目以降は簡潔なレビューをするように心がけてください:
+              - ロジック
+              - セキュリティ
+              - パフォーマンス
+              - データ競合
+              - 一貫性
+              - エラー処理
+              - 保守性
+              - モジュール性
+              - 複雑性
+              - 最適化
+          summarize_release_notes: |
+            このプルリクエストのために、その目的とユーザーストーリーに焦点を当てて、markdownフォーマットで簡潔なリリースノートを作成してください。
+            変更は次のように分類し箇条書きにすること:
+              "New Feature", "Bug fix", "Documentation", "Refactor", "Style",
+              "Test", "Chore", "Revert"
+            例えば:
+            ```
+            - New Feature: UIに統合ページが追加されました
+            ```
+            回答は50-100語以内にしてください。この回答はそのままリリースノートに使用されるので、追加のコメントは避けてください。
+
+          
