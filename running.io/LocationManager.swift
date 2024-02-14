@@ -22,6 +22,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         locationManager.startUpdatingLocation()
     }
     
+    
+    
     func locationManager(_ manager: CLLocationManager,
                          didUpdateLocations locations: [CLLocation]){
         
