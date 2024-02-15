@@ -11,15 +11,11 @@ import MapKit
 struct FullScreenMapView: View {
     @ObservedObject private var locationManager = LocationManager()
     
-    @State  var trackingMode = MapUserTrackingMode.follow
-
     var body: some View {
-        
-        Map(coordinateRegion: $locationManager.region,
-            showsUserLocation: true,
-            userTrackingMode: $trackingMode)
+        MapView(locationManager: locationManager)
             .edgesIgnoringSafeArea(.all)
     }
+    
 }
 
 struct FullScreenMapView_Previews: PreviewProvider {
@@ -27,4 +23,3 @@ struct FullScreenMapView_Previews: PreviewProvider {
         FullScreenMapView()
     }
 }
-

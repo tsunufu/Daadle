@@ -13,6 +13,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var location: CLLocation?
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
+    @Published var locations = [CLLocationCoordinate2D]()
 
     override init() {
         locationManager = CLLocationManager()
@@ -46,7 +47,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
                 let center = CLLocationCoordinate2D(
                     latitude: $0.coordinate.latitude,
                     longitude: $0.coordinate.longitude)
-
+                self.locations.append(center)
                     // 地図を表示するための領域を再構築
                     region = MKCoordinateRegion(
                         center: center,
@@ -56,6 +57,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             }
             print("(\(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude))")
         }
+        
         
     }
 
