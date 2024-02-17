@@ -16,6 +16,7 @@ struct MapView: UIViewRepresentable {
            print("updateUIView is called")
            uiView.setRegion(locationManager.region, animated: true)
            updatePolyline(for: uiView)
+           updatePolygon(for: uiView)
        }
 
        func makeCoordinator() -> Coordinator {
@@ -48,6 +49,12 @@ struct MapView: UIViewRepresentable {
                    renderer.strokeColor = .blue
                    renderer.lineWidth = 4.0
                    return renderer
+               } else if let polygon = overlay as? MKPolygon {
+                   let renderer = MKPolygonRenderer(polygon: polygon)
+                   renderer.strokeColor = .purple
+                   renderer.lineWidth = 4.0
+                   renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
+                   return renderer
                }
                return MKOverlayRenderer(overlay: overlay)
            }
@@ -64,6 +71,15 @@ extension MapView {
         
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         mapView.addOverlay(polyline)
+    }
+    
+    func updatePolygon(for mapView: MKMapView) {
+        mapView.overlays.forEach { if $0 is MKPolygon { mapView.removeOverlay($0) } }
+
+        let coordinates = locationManager.locations
+        let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
+
+        mapView.addOverlay(polygon)
     }
 }
 
