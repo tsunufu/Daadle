@@ -14,7 +14,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
     @Published var locations = [CLLocationCoordinate2D]()
-
+    
     override init() {
         locationManager = CLLocationManager()
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
@@ -32,33 +32,35 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     
     
     
+    
     func locationManager(_ manager: CLLocationManager,
                          didUpdateLocations locations: [CLLocation], didChangeAuthorization status: CLAuthorizationStatus){
         
-            if status == .authorizedAlways {
-                locationManager.allowsBackgroundLocationUpdates = true
-                locationManager.startUpdatingLocation()
-            }
-
-        
-        if let newLocation = locations.last{
-            self.location = newLocation
-            locations.last.map {
-                let center = CLLocationCoordinate2D(
-                    latitude: $0.coordinate.latitude,
-                    longitude: $0.coordinate.longitude)
-                self.locations.append(center)
-                    // 地図を表示するための領域を再構築
-                    region = MKCoordinateRegion(
-                        center: center,
-                        latitudinalMeters: 1000.0,
-                        longitudinalMeters: 1000.0
-                )
-            }
-            print("(\(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude))")
+        if status == .authorizedAlways {
+            locationManager.allowsBackgroundLocationUpdates = true
+            locationManager.startUpdatingLocation()
         }
         
         
-    }
+        guard let newLocation = locations.last else { return }
 
+        let locationAdded = filterAndAddLocation(newLocation)
+        if locationAdded {
+            let center = CLLocationCoordinate2D(latitude: newLocation.coordinate.latitude, longitude: newLocation.coordinate.longitude)
+            self.location = newLocation
+            self.locations.append(center)
+            self.region = MKCoordinateRegion(center: center, latitudinalMeters: 1000.0, longitudinalMeters: 1000.0)
+            print("New location added: (\(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude))")
+        }
+        
+    }
+    
+    func filterAndAddLocation(_ location: CLLocation) -> Bool {
+        let age = -location.timestamp.timeIntervalSinceNow
+        if age > 10 { return false }
+        if location.horizontalAccuracy < 0 { return false }
+        if location.horizontalAccuracy > 100 { return false }
+
+        return true
+    }
 }
