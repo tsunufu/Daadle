@@ -16,6 +16,7 @@
 		F5BBD2152B84B2D100593866 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F5BBD2142B84B2D100593866 /* GoogleSignIn */; };
 		F5BBD2172B84B34D00593866 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */; };
 		F5BBD2232B85138200593866 /* UserSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2222B85138200593866 /* UserSession.swift */; };
+		F5BBD2252B851F6400593866 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2242B851F6400593866 /* TitleView.swift */; };
 		F5BF30922B8467EA0057770A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30912B8467EA0057770A /* FirebaseAuth */; };
 		F5BF30942B8467EA0057770A /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30932B8467EA0057770A /* FirebaseDatabase */; };
 /* End PBXBuildFile section */
@@ -31,6 +32,7 @@
 		2AD260852B7DBF88000265A4 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F5BBD2222B85138200593866 /* UserSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSession.swift; sourceTree = "<group>"; };
+		F5BBD2242B851F6400593866 /* TitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +77,7 @@
 				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
 				2AD260782B7C433F000265A4 /* Assets.xcassets */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
+				F5BBD2242B851F6400593866 /* TitleView.swift */,
 			);
 			path = running.io;
 			sourceTree = "<group>";
@@ -172,6 +175,7 @@
 				2AD260862B7DBF88000265A4 /* MapView.swift in Sources */,
 				2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */,
 				2AD260842B7CCD1A000265A4 /* LocationManager.swift in Sources */,
+				F5BBD2252B851F6400593866 /* TitleView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

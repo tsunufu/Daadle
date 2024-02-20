@@ -38,16 +38,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct running_ioApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var userSession = UserSession() // UserSession オブジェクトの追加
+    @StateObject private var userSession = UserSession()
 
     var body: some Scene {
         WindowGroup {
             if userSession.isSignedIn {
-                FullScreenMapView(userUID: userSession.userUID ?? "") // UID を渡す
-                    .environmentObject(userSession) // UserSession を環境オブジェクトとして渡す
+                FullScreenMapView(userUID: userSession.userUID ?? "")
+                    .environmentObject(userSession)
             } else {
-                LoginView()
-                    .environmentObject(userSession) // UserSession を環境オブジェクトとして渡す
+                TitleView() // タイトル画面を最初に表示
+                    .environmentObject(userSession)
             }
         }
     }

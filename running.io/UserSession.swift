@@ -10,4 +10,5 @@ import Foundation
 class UserSession: ObservableObject {
     @Published var isSignedIn: Bool = false
     @Published var userUID: String? = nil
+    @Published var isNavigatingToLogin: Bool = false
 }
