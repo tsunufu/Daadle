@@ -7,6 +7,8 @@
 
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
+import GoogleSignIn
 
 // 追加
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -15,15 +17,88 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         FirebaseApp.configure()
         return true
     }
+    
+    func application(_ application: UIApplication,
+                     open url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) -> Bool {
+        return GIDSignIn.sharedInstance.handle(url)
+    }
 }
 
+
+//@main
+//struct running_ioApp: App {
+//    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+//    var body: some Scene {
+//        WindowGroup {
+//            FullScreenMapView()
+//        }
+//    }
+//}
 
 @main
 struct running_ioApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var userSession = UserSession() // UserSession オブジェクトの追加
+
     var body: some Scene {
         WindowGroup {
-            FullScreenMapView()
+            if userSession.isSignedIn {
+                FullScreenMapView(userUID: userSession.userUID ?? "") // UID を渡す
+                    .environmentObject(userSession) // UserSession を環境オブジェクトとして渡す
+            } else {
+                LoginView()
+                    .environmentObject(userSession) // UserSession を環境オブジェクトとして渡す
+            }
+        }
+    }
+}
+
+struct LoginView: View {
+    @EnvironmentObject var userSession: UserSession // UserSession オブジェクトへのアクセス
+
+    var body: some View {
+        Button(action: signInWithGoogle) {
+            Text("Sign in with Google")
+        }
+    }
+    
+    private func signInWithGoogle() {
+        
+        guard let clientID:String = FirebaseApp.app()?.options.clientID else { return }
+        let config:GIDConfiguration = GIDConfiguration(clientID: clientID)
+        
+        let windowScene:UIWindowScene? = UIApplication.shared.connectedScenes.first as? UIWindowScene
+        let rootViewController:UIViewController? = windowScene?.windows.first!.rootViewController!
+        
+        GIDSignIn.sharedInstance.configuration = config
+        
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController!) { result, error in
+            guard error == nil else {
+                print("GIDSignInError: \(error!.localizedDescription)")
+                return
+            }
+            
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString
+            else {
+                return
+            }
+            
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken,accessToken: user.accessToken.tokenString)
+            self.login(credential: credential)
+        }
+    }
+    
+    // ログイン処理内で userSession を更新
+    private func login(credential: AuthCredential) {
+        Auth.auth().signIn(with: credential) { (authResult, error) in
+            // エラーチェックと UID の取得
+            DispatchQueue.main.async {
+                if let user = authResult?.user {
+                    self.userSession.userUID = user.uid
+                    self.userSession.isSignedIn = true
+                }
+            }
         }
     }
 }

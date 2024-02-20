@@ -2,20 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1059199994520-hueu4svr9l07uvrd855jk8kjaetqsv98</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
 	</array>
-	<key>CFBundleIdentifier</key>
-	<string></string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>location-services</string>
-		<string>gps</string>
-	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ルートの取得のために使用します</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>ルートの取得のために使用します</string>
 </dict>
 </plist>

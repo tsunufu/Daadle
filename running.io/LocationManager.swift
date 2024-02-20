@@ -15,9 +15,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
     @Published var locations = [CLLocationCoordinate2D]()
-    
-//    var ref: DatabaseReference! = Database.database().reference()
-    
+        
     override init() {
         locationManager = CLLocationManager()
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
@@ -57,20 +55,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         }
         
     }
-    
-//    func uploadLocation(latitude: Double, longitude: Double) {
-//        // 位置情報のデータを準備
-//            let locationData = ["latitude": latitude, "longitude": longitude]
-//            
-//            // ユーザーIDに基づいて位置情報をFirebaseに保存
-//            ref.child("users").child("testUser").child("locations").childByAutoId().setValue(locationData) { (error, reference) in
-//                if let error = error {
-//                    print("Data could not be saved: \(error.localizedDescription)")
-//                } else {
-//                    print("Data saved successfully!")
-//                }
-//            }
-//    }
     
     func filterAndAddLocation(_ location: CLLocation) -> Bool {
         let age = -location.timestamp.timeIntervalSinceNow
