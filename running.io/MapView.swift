@@ -4,6 +4,7 @@ import FirebaseDatabase
 
 struct MapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
+    var userUID: String
     
     var ref: DatabaseReference! = Database.database().reference()
 
@@ -86,7 +87,7 @@ extension MapView {
             let locationData = ["latitude": latitude, "longitude": longitude]
             
             // ユーザーIDに基づいて位置情報をFirebaseに保存
-            ref.child("users").child("testUser").child("locations").setValue(locationData) { (error, reference) in
+            ref.child("users").child(userUID).child("locations").setValue(locationData) { (error, reference) in
                 if let error = error {
                     print("Data could not be saved: \(error.localizedDescription)")
                 } else {
