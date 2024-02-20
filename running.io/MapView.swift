@@ -1,8 +1,11 @@
 import SwiftUI
 import MapKit
+import FirebaseDatabase
 
 struct MapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
+    
+    var ref: DatabaseReference! = Database.database().reference()
 
        func makeUIView(context: Context) -> MKMapView {
            let mapView = MKMapView()
@@ -71,6 +74,26 @@ extension MapView {
         
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         mapView.addOverlay(polyline)
+        
+        if let lastLocation = locationManager.locations.last {
+            // Firebase Databaseを更新
+            uploadLocation(latitude: lastLocation.latitude, longitude: lastLocation.longitude)
+        }
+    }
+    
+    func uploadLocation(latitude: Double, longitude: Double) {
+        // 位置情報のデータを準備
+            let locationData = ["latitude": latitude, "longitude": longitude]
+            
+            // ユーザーIDに基づいて位置情報をFirebaseに保存
+            ref.child("users").child("testUser").child("locations").setValue(locationData) { (error, reference) in
+                if let error = error {
+                    print("Data could not be saved: \(error.localizedDescription)")
+                } else {
+                    print("Data saved successfully!")
+                }
+            }
+        
     }
     
     func updatePolygon(for mapView: MKMapView) {
