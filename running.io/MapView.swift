@@ -99,15 +99,14 @@ extension MapView {
         let timestamp = Int(Date().timeIntervalSince1970 * 1000)
         let locationData: [String: Any] = ["latitude": latitude, "longitude": longitude, "timestamp": timestamp]
         
-        // ユーザーIDに基づいて位置情報をFirebaseに保存
-        ref.child("users").child(userUID).child("locations").child("\(timestamp)").setValue(locationData) { (error, reference) in
+        // ユーザーIDに基づいて位置情報をFirebaseに保存（timestampをキーとして使用せず、配列のように保存）
+        ref.child("users").child(userUID).child("locations").setValue(locationData) { (error, reference) in
             if let error = error {
                 print("Data could not be saved: \(error.localizedDescription)")
             } else {
                 print("Data saved successfully!")
             }
         }
-        
     }
     
     func updatePolygon(for mapView: MKMapView) {

@@ -58,7 +58,6 @@
 		2AD260682B7C433E000265A4 = {
 			isa = PBXGroup;
 			children = (
-				F5BBD22C2B86FE7500593866 /* ProfileView.swift */,
 				2AD260732B7C433E000265A4 /* running.io */,
 				2AD260722B7C433E000265A4 /* Products */,
 			);
@@ -83,10 +82,11 @@
 				2AD260852B7DBF88000265A4 /* MapView.swift */,
 				F5BBD2222B85138200593866 /* UserSession.swift */,
 				F5BBD2242B851F6400593866 /* TitleView.swift */,
+				F5BBD22C2B86FE7500593866 /* ProfileView.swift */,
+				F5BBD22A2B86E08900593866 /* OnBoardingView.swift */,
 				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
 				2AD260782B7C433F000265A4 /* Assets.xcassets */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
-				F5BBD22A2B86E08900593866 /* OnBoardingView.swift */,
 			);
 			path = running.io;
 			sourceTree = "<group>";
