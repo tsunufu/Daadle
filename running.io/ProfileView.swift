@@ -9,18 +9,15 @@ import Foundation
 import SwiftUI
 
 struct ProfileView: View {
-    // 仮のデータを使用します。実際のアプリではモデルからデータを取得してください。
     let profileImageName = "defaultProfile" // デフォルトのプロフィール画像名
     let userName = "あなたの名前"
     let totalScore = 298489
     let streaks = 12
     let wins = 24
-    // 仮のフレンドのランキングデータ
     let friendsList = [
             ("フレンド1", 13982, "B+"),
             ("フレンド2", 12500, "A"),
             ("フレンド3", 11800, "B"),
-            // 他のフレンドのスコアデータ...
         ]
 
     var body: some View {
@@ -34,7 +31,7 @@ struct ProfileView: View {
                     .clipShape(Circle())
                     .overlay(Circle().stroke(Color.white, lineWidth: 4))
                     .shadow(radius: 10)
-                    .padding(.top, 44) // 実際のUIと同じ余白を設定
+                    .padding(.top, 44)
 
                 // ユーザー名
                 Text(userName)
@@ -48,7 +45,6 @@ struct ProfileView: View {
 //                    Image(systemName: "rosette")
 //                    Image(systemName: "crown")
 //                    Image(systemName: "star")
-//                    // 実際のバッジ画像に置き換えてください
 //                }
                 .font(.title)
                 .padding(.top, 16)

@@ -18,9 +18,12 @@ struct MapView: UIViewRepresentable {
 
        func updateUIView(_ uiView: MKMapView, context: Context) {
            print("updateUIView is called")
-           uiView.setRegion(locationManager.region, animated: true)
+//           uiView.setRegion(locationManager.region, animated: true)
            updatePolyline(for: uiView)
            updatePolygon(for: uiView)
+           
+           let allAnnotations = uiView.annotations
+           uiView.removeAnnotations(allAnnotations)
            
            // allUserLocations を使用して、マップ上に各ユーザーの位置を表示
            for (userId, locationData) in locationManager.allUserLocations {
@@ -31,6 +34,8 @@ struct MapView: UIViewRepresentable {
                    annotation.coordinate = coordinate
                    annotation.title = userId // ユーザー名を設定して表示させた方がいいかも
                    uiView.addAnnotation(annotation)
+                   
+                   print("ユーザーID: \(userId) - 位置: (\(latitude), \(longitude))")
                }
            }
        }

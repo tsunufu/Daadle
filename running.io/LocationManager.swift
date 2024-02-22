@@ -15,27 +15,39 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
     @Published var locations = [CLLocationCoordinate2D]()
-    @Published var allUserLocations: [String: [String: Any]] = [:] // ユーザーIDをキー、位置情報ディクショナリを値とする
+    @Published var allUserLocations: [String: [String: Any]] = [:]
         
     var ref: DatabaseReference = Database.database().reference()
+    
+    func fetchOtherUsersLocation() {
+        let dbRef = Database.database().reference()
+        let userId = ""
 
-   // 複数ユーザーの位置情報を監視するためのメソッド
-    func observeUserLocations() {
-        ref.child("users").observe(.value, with: { snapshot in
-            var updatedUserLocations: [String: [String: Any]] = [:]
+        dbRef.child("users").observe(.value, with: { snapshot in
+            guard let usersDict = snapshot.value as? [String: AnyObject] else {
+                DispatchQueue.main.async {
+                    print("エラー: データをデコードできませんでした")
+                }
+                return
+            }
 
-            for child in snapshot.children.allObjects as! [DataSnapshot] {
-                if let userId = child.key as String?,
-                   let locationData = child.value as? [String: [String: Any]],
-                   let latestLocationData = locationData.values.sorted(by: { ($0["timestamp"] as? Int ?? 0) > ($1["timestamp"] as? Int ?? 0) }).first {
-                    updatedUserLocations[userId] = latestLocationData
+            var newLocations: [String: [String: Any]] = [:]
+            for (key, value) in usersDict where key != userId {
+                if let locationDict = value["locations"] as? [String: AnyObject],
+                   let latitude = locationDict["latitude"] as? Double,
+                   let longitude = locationDict["longitude"] as? Double {
+                    print("ユーザー: \(key) - 緯度: \(latitude), 経度: \(longitude)")
+                    newLocations[key] = ["latitude": latitude, "longitude": longitude]
                 }
             }
-
             DispatchQueue.main.async {
-                self.allUserLocations = updatedUserLocations
+                self.allUserLocations = newLocations
             }
-        })
+        }) { error in
+            DispatchQueue.main.async {
+                print(error.localizedDescription)
+            }
+        }
     }
 
     
@@ -52,6 +64,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         super.init()
         locationManager.delegate = self
         locationManager.startUpdatingLocation()
+        fetchOtherUsersLocation()
     }
     
     
