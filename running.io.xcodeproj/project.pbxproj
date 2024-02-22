@@ -19,6 +19,7 @@
 		F5BBD2252B851F6400593866 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2242B851F6400593866 /* TitleView.swift */; };
 		F5BBD2292B86D77600593866 /* DelaGothicOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */; };
 		F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD22A2B86E08900593866 /* OnBoardingView.swift */; };
+		F5BBD22D2B86FE7500593866 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD22C2B86FE7500593866 /* ProfileView.swift */; };
 		F5BF30922B8467EA0057770A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30912B8467EA0057770A /* FirebaseAuth */; };
 		F5BF30942B8467EA0057770A /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30932B8467EA0057770A /* FirebaseDatabase */; };
 /* End PBXBuildFile section */
@@ -37,6 +38,7 @@
 		F5BBD2242B851F6400593866 /* TitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleView.swift; sourceTree = "<group>"; };
 		F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DelaGothicOne-Regular.ttf"; sourceTree = "<group>"; };
 		F5BBD22A2B86E08900593866 /* OnBoardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnBoardingView.swift; sourceTree = "<group>"; };
+		F5BBD22C2B86FE7500593866 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 		2AD260682B7C433E000265A4 = {
 			isa = PBXGroup;
 			children = (
+				F5BBD22C2B86FE7500593866 /* ProfileView.swift */,
 				2AD260732B7C433E000265A4 /* running.io */,
 				2AD260722B7C433E000265A4 /* Products */,
 			);
@@ -185,6 +188,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5BBD22D2B86FE7500593866 /* ProfileView.swift in Sources */,
 				2AD260772B7C433E000265A4 /* ContentView.swift in Sources */,
 				F5BBD2232B85138200593866 /* UserSession.swift in Sources */,
 				F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */,
