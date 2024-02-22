@@ -21,6 +21,18 @@ struct MapView: UIViewRepresentable {
            uiView.setRegion(locationManager.region, animated: true)
            updatePolyline(for: uiView)
            updatePolygon(for: uiView)
+           
+           // allUserLocations を使用して、マップ上に各ユーザーの位置を表示
+           for (userId, locationData) in locationManager.allUserLocations {
+               if let latitude = locationData["latitude"] as? CLLocationDegrees,
+                  let longitude = locationData["longitude"] as? CLLocationDegrees {
+                   let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                   let annotation = MKPointAnnotation()
+                   annotation.coordinate = coordinate
+                   annotation.title = userId // ユーザー名を設定して表示させた方がいいかも
+                   uiView.addAnnotation(annotation)
+               }
+           }
        }
 
        func makeCoordinator() -> Coordinator {
@@ -84,16 +96,17 @@ extension MapView {
     
     func uploadLocation(latitude: Double, longitude: Double) {
         // 位置情報のデータを準備
-            let locationData = ["latitude": latitude, "longitude": longitude]
-            
-            // ユーザーIDに基づいて位置情報をFirebaseに保存
-            ref.child("users").child(userUID).child("locations").setValue(locationData) { (error, reference) in
-                if let error = error {
-                    print("Data could not be saved: \(error.localizedDescription)")
-                } else {
-                    print("Data saved successfully!")
-                }
+        let timestamp = Int(Date().timeIntervalSince1970 * 1000)
+        let locationData: [String: Any] = ["latitude": latitude, "longitude": longitude, "timestamp": timestamp]
+        
+        // ユーザーIDに基づいて位置情報をFirebaseに保存
+        ref.child("users").child(userUID).child("locations").child("\(timestamp)").setValue(locationData) { (error, reference) in
+            if let error = error {
+                print("Data could not be saved: \(error.localizedDescription)")
+            } else {
+                print("Data saved successfully!")
             }
+        }
         
     }
     

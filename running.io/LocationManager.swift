@@ -15,7 +15,30 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
     @Published var locations = [CLLocationCoordinate2D]()
+    @Published var allUserLocations: [String: [String: Any]] = [:] // ユーザーIDをキー、位置情報ディクショナリを値とする
         
+    var ref: DatabaseReference = Database.database().reference()
+
+   // 複数ユーザーの位置情報を監視するためのメソッド
+    func observeUserLocations() {
+        ref.child("users").observe(.value, with: { snapshot in
+            var updatedUserLocations: [String: [String: Any]] = [:]
+
+            for child in snapshot.children.allObjects as! [DataSnapshot] {
+                if let userId = child.key as String?,
+                   let locationData = child.value as? [String: [String: Any]],
+                   let latestLocationData = locationData.values.sorted(by: { ($0["timestamp"] as? Int ?? 0) > ($1["timestamp"] as? Int ?? 0) }).first {
+                    updatedUserLocations[userId] = latestLocationData
+                }
+            }
+
+            DispatchQueue.main.async {
+                self.allUserLocations = updatedUserLocations
+            }
+        })
+    }
+
+    
     override init() {
         locationManager = CLLocationManager()
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
