@@ -96,7 +96,7 @@ struct FullScreenMapView: View {
         }
         .sheet(isPresented: $showProfileView) {
             // プロフィールビューのコンテンツ
-            ProfileView() // ProfileViewはプロフィールを表示するためのビューです。適宜作成してください。
+            ProfileView(userID: userUID)
         }
     }
 }

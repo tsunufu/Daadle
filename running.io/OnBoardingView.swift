@@ -10,6 +10,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
+import FirebaseDatabase
 
 struct OnBoardingView: View {
     @EnvironmentObject var userSession: UserSession
@@ -149,6 +150,19 @@ struct OnBoardingView: View {
                 if let user = authResult?.user {
                     self.userSession.userUID = user.uid
                     self.userSession.isSignedIn = true
+                    
+                    // 新しいユーザーの場合はデフォルトのユーザー名を設定する
+                    let userRef = Database.database().reference(withPath: "users/\(user.uid)")
+                    // ユーザーデータの確認と必要に応じて更新
+                    userRef.observeSingleEvent(of: .value, with: { snapshot in
+                        // username の値を確認
+                        if let userData = snapshot.value as? [String: Any], let username = userData["username"] as? String, !username.isEmpty {
+                            // username が存在し、値がアサインされている場合は何もしない
+                        } else {
+                            // username が存在しないか、値が空の場合は "未設定ユーザー" として設定
+                            userRef.updateChildValues(["username": "未設定ユーザー"])
+                        }
+                    })
                 }
             }
         }
