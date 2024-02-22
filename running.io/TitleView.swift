@@ -26,13 +26,11 @@ struct TitleView: View {
                     Text("Daadle")
                         .font(Font.custom("DelaGothicOne-Regular", size: 36))
                         .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
-                        .foregroundColor(Color(.gray))
                         .padding(.vertical, 12)
                     
                     Text("塗ろう、自分の街になるまで")
                         .font(Font.custom("DelaGothicOne-Regular", size: 16))
                         .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
-                        .foregroundColor(Color(.gray))
                     
                     Button(action: {
                         userSession.isNavigatingToLogin = true

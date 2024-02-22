@@ -50,23 +50,11 @@ struct BottomCardView: View {
                             .font(Font.custom("DelaGothicOne-Regular", size: 12))
                             .padding(.bottom, 42)
                     }
-                    // ... more items
                 }
                 .padding([.trailing, .top, .bottom])
             }
             
-//            HStack {
-//                ForEach(["hand.thumbsup", "hand.thumbsdown", "star"], id: \.self) { imageName in
-//                    Image(systemName: imageName)
-//                        .padding(4)
-//                }
-//                Spacer()
-//                Text("24  回答")
-//                    .font(.caption)
-//                    .foregroundColor(.gray)
-//            }
             .padding(.horizontal, 32)
-//            Spacer()
         }
         .background(Color(red: 253 / 255, green: 254 / 255, blue: 249 / 255))
         .cornerRadius(30)
@@ -78,21 +66,37 @@ struct BottomCardView: View {
 struct FullScreenMapView: View {
     @ObservedObject private var locationManager = LocationManager()
     var userUID: String
-    
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            MapView(locationManager: locationManager, userUID: userUID)
-            BottomCardView()
-                .edgesIgnoringSafeArea(.bottom)
-        }
-        .edgesIgnoringSafeArea(.all)
-    }
-    
-}
+    @State private var showProfileView = false // プロフィールビュー表示用の状態変数
 
-struct FullScreenMapView_Previews: PreviewProvider {
-    static var previews: some View {
-        // ダミーとしてtestUserを使用
-        FullScreenMapView(userUID: "testUser")
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            MapView(locationManager: locationManager, userUID: userUID)
+                .edgesIgnoringSafeArea(.all) // MapViewが全方向のsafeAreaを無視
+
+            // プロフィール画像
+            VStack {
+                HStack {
+                    Spacer() // 右寄せにするためのSpacer
+                    Image(systemName: "person.circle") // あとでGoogleの画像になるよう置き換える
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                        .padding()
+                        .onTapGesture {
+                            self.showProfileView = true // プロフィールビューを表示
+                        }
+                }
+                Spacer() // 全体のレイアウトを整えるためのSpacer
+            }
+
+            BottomCardView()
+                .offset(y: 50) // SafeAreaで無視できなかったからそもそもずらした、けどこれ実装方法としてはカスだよな
+                .edgesIgnoringSafeArea(.bottom) // BottomCardViewが下部のsafeAreaを無視
+        }
+        .sheet(isPresented: $showProfileView) {
+            // プロフィールビューのコンテンツ
+            ProfileView() // ProfileViewはプロフィールを表示するためのビューです。適宜作成してください。
+        }
     }
 }
