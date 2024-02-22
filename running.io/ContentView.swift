@@ -12,24 +12,24 @@ struct BottomCardView: View {
     var body: some View {
         VStack {
             Capsule()
-                .frame(width: 60, height: 6)
+                .frame(width: 60, height: 8)
                 .foregroundColor(.secondary)
-                .padding(10)
+                .padding(.vertical, 10)
             
             HStack {
                 VStack(alignment: .leading) {
                     Text("シーズン1")
-                        .font(.title2)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 20))
                         .fontWeight(.bold)
                     Text("開催期間 2/1~3/31")
-                        .font(.caption)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 12))
                         .foregroundColor(.gray)
                     Text("Score: 10298")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(Font.custom("DelaGothicOne-Regular", size:12))
                     Text("次のバッジ獲得まであと4702")
-                        .font(.caption)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 8))
                         .foregroundColor(.gray)
+                        .padding(.bottom, 42)
                 }
                 .padding([.leading, .top, .bottom])
                 
@@ -37,16 +37,18 @@ struct BottomCardView: View {
                 
                 VStack(alignment: .leading) {
                     Text("ランキング")
-                        .font(.headline)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
                     HStack {
                         Image(systemName: "rosette")
                         Text("1  あおいち  28384")
-                            .font(.system(size: 8))
+                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
                     }
                     HStack {
                         Image(systemName: "rosette")
-                        Text("2  あおいち  22384")
-                            .font(.system(size: 8))
+                            .padding(.bottom, 42)
+                        Text("2  えふじ  22394")
+                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                            .padding(.bottom, 42)
                     }
                     // ... more items
                 }
@@ -63,11 +65,12 @@ struct BottomCardView: View {
 //                    .font(.caption)
 //                    .foregroundColor(.gray)
 //            }
-            .padding(.horizontal)
+            .padding(.horizontal, 32)
+//            Spacer()
         }
         .background(Color(red: 253 / 255, green: 254 / 255, blue: 249 / 255))
-        .cornerRadius(25)
-        .shadow(radius: 10)
+        .cornerRadius(30)
+        .shadow(radius: 12)
         .padding([.horizontal, .bottom], 0)
     }
 }
@@ -79,7 +82,8 @@ struct FullScreenMapView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             MapView(locationManager: locationManager, userUID: userUID)
-            BottomCardView() // Use the custom bottom card view
+            BottomCardView()
+                .edgesIgnoringSafeArea(.bottom)
         }
         .edgesIgnoringSafeArea(.all)
     }
