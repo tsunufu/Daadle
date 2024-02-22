@@ -67,11 +67,11 @@ struct ProfileView: View {
                 HStack {
                     if isEditing {
                         TextField("ユーザー名を入力", text: $draftUsername)
-                            .font(Font.custom("DelaGothicOne-Regular", size: 16)) // フォントを設定
-                            .padding(10) // TextFieldの内側に余白を追加
-                            .background(Color.white) // 背景色を白に設定
-                            .cornerRadius(10) // 角を丸くする
-                            .padding(.trailing, 10) // TextFieldと編集ボタンの間に余白を追加
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                            .padding(10)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                            .padding(.trailing, 10)
                     } else {
                         Text(userName)
                             .font(Font.custom("DelaGothicOne-Regular", size: 24))
@@ -87,8 +87,13 @@ struct ProfileView: View {
                             self.isEditing = true
                         }
                     }) {
-                        Image(systemName: isEditing ? "checkmark.square.fill" : "pencil")
-                            .foregroundColor(isEditing ? .green : .gray)
+                        if isEditing {
+                            Image(systemName: "checkmark.square.fill")
+                                .foregroundColor(.green)
+                        } else {
+                            Image("edit") // 'edit' という名前のカスタム画像を使用
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
                 .padding(.horizontal, 32) // HStack全体に水平方向の余白を適用
