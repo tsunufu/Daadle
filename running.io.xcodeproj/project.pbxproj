@@ -18,6 +18,7 @@
 		F5BBD2232B85138200593866 /* UserSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2222B85138200593866 /* UserSession.swift */; };
 		F5BBD2252B851F6400593866 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2242B851F6400593866 /* TitleView.swift */; };
 		F5BBD2292B86D77600593866 /* DelaGothicOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */; };
+		F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD22A2B86E08900593866 /* OnBoardingView.swift */; };
 		F5BF30922B8467EA0057770A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30912B8467EA0057770A /* FirebaseAuth */; };
 		F5BF30942B8467EA0057770A /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30932B8467EA0057770A /* FirebaseDatabase */; };
 /* End PBXBuildFile section */
@@ -35,6 +36,7 @@
 		F5BBD2222B85138200593866 /* UserSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSession.swift; sourceTree = "<group>"; };
 		F5BBD2242B851F6400593866 /* TitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleView.swift; sourceTree = "<group>"; };
 		F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DelaGothicOne-Regular.ttf"; sourceTree = "<group>"; };
+		F5BBD22A2B86E08900593866 /* OnBoardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnBoardingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +83,7 @@
 				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
 				2AD260782B7C433F000265A4 /* Assets.xcassets */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
+				F5BBD22A2B86E08900593866 /* OnBoardingView.swift */,
 			);
 			path = running.io;
 			sourceTree = "<group>";
@@ -184,6 +187,7 @@
 			files = (
 				2AD260772B7C433E000265A4 /* ContentView.swift in Sources */,
 				F5BBD2232B85138200593866 /* UserSession.swift in Sources */,
+				F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */,
 				2AD260862B7DBF88000265A4 /* MapView.swift in Sources */,
 				2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */,
 				2AD260842B7CCD1A000265A4 /* LocationManager.swift in Sources */,
