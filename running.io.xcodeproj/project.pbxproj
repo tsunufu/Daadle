@@ -17,6 +17,7 @@
 		F5BBD2172B84B34D00593866 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */; };
 		F5BBD2232B85138200593866 /* UserSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2222B85138200593866 /* UserSession.swift */; };
 		F5BBD2252B851F6400593866 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BBD2242B851F6400593866 /* TitleView.swift */; };
+		F5BBD2292B86D77600593866 /* DelaGothicOne-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */; };
 		F5BF30922B8467EA0057770A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30912B8467EA0057770A /* FirebaseAuth */; };
 		F5BF30942B8467EA0057770A /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = F5BF30932B8467EA0057770A /* FirebaseDatabase */; };
 /* End PBXBuildFile section */
@@ -33,6 +34,7 @@
 		F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F5BBD2222B85138200593866 /* UserSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSession.swift; sourceTree = "<group>"; };
 		F5BBD2242B851F6400593866 /* TitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleView.swift; sourceTree = "<group>"; };
+		F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DelaGothicOne-Regular.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,16 +70,17 @@
 		2AD260732B7C433E000265A4 /* running.io */ = {
 			isa = PBXGroup;
 			children = (
+				F5BBD2262B86CEAB00593866 /* fonts */,
 				2AD260822B7CCA24000265A4 /* running-io-Info.plist */,
 				2AD260742B7C433E000265A4 /* running_ioApp.swift */,
 				2AD260832B7CCD1A000265A4 /* LocationManager.swift */,
 				2AD260762B7C433E000265A4 /* ContentView.swift */,
 				2AD260852B7DBF88000265A4 /* MapView.swift */,
 				F5BBD2222B85138200593866 /* UserSession.swift */,
+				F5BBD2242B851F6400593866 /* TitleView.swift */,
 				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
 				2AD260782B7C433F000265A4 /* Assets.xcassets */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
-				F5BBD2242B851F6400593866 /* TitleView.swift */,
 			);
 			path = running.io;
 			sourceTree = "<group>";
@@ -88,6 +91,14 @@
 				2AD2607B2B7C433F000265A4 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		F5BBD2262B86CEAB00593866 /* fonts */ = {
+			isa = PBXGroup;
+			children = (
+				F5BBD2282B86D77600593866 /* DelaGothicOne-Regular.ttf */,
+			);
+			path = fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,6 +170,7 @@
 			files = (
 				2AD2607C2B7C433F000265A4 /* Preview Assets.xcassets in Resources */,
 				2AD260792B7C433F000265A4 /* Assets.xcassets in Resources */,
+				F5BBD2292B86D77600593866 /* DelaGothicOne-Regular.ttf in Resources */,
 				F5BBD2172B84B34D00593866 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -304,7 +316,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"running.io/Preview Content\"";
-				DEVELOPMENT_TEAM = YVXUM882PV;
+				DEVELOPMENT_TEAM = Q22Z7PDA6N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "running-io-Info.plist";
@@ -321,7 +333,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "app.Fujiwara.ehuji.running-io";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.Nakamura.aoichi.running-io";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -337,7 +349,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"running.io/Preview Content\"";
-				DEVELOPMENT_TEAM = YVXUM882PV;
+				DEVELOPMENT_TEAM = Q22Z7PDA6N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "running-io-Info.plist";
@@ -354,7 +366,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "app.Fujiwara.ehuji.running-io";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.Nakamura.aoichi.running-io";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

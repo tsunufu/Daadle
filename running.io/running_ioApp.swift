@@ -25,16 +25,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 }
 
 
-//@main
-//struct running_ioApp: App {
-//    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-//    var body: some Scene {
-//        WindowGroup {
-//            FullScreenMapView()
-//        }
-//    }
-//}
-
 @main
 struct running_ioApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate

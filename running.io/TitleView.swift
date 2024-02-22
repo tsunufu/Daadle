@@ -10,42 +10,47 @@ import SwiftUI
 
 struct TitleView: View {
     @EnvironmentObject var userSession: UserSession
-
+    
     var body: some View {
         NavigationView {
-            VStack {
-                Image("logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 200)
+            ZStack {
+                Color(red: 255 / 255, green: 209 / 255, blue: 163 / 255)
+                    .edgesIgnoringSafeArea(.all)
                 
-                Text("Daadle")
-                    .font(.system(size: 36, weight: .bold, design: .default))
-                    .foregroundColor(Color(.gray))
-                    .fontWeight(.bold)
-//                    .padding()
-
-                Text("塗ろう、自分の街になるまで")
-                    .font(.system(size: 16, weight: .bold, design: .default))
-                    .foregroundColor(Color(.gray))
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 12)
-
-                Button(action: {
-                    userSession.isNavigatingToLogin = true
-                }) {
-                    Text("はじめる")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.gray) // 背景色を指定
-                        .padding()
-                        .frame(width: UIScreen.main.bounds.width / 2)
-                        .background(RoundedRectangle(cornerRadius: 20)
-                                        .fill(Color.orange))
+                VStack {
+                    Image("logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 200)
+                    
+                    Text("Daadle")
+                        .font(Font.custom("DelaGothicOne-Regular", size: 36))
+                        .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
+                        .foregroundColor(Color(.gray))
+                        .padding(.vertical, 12)
+                    
+                    Text("塗ろう、自分の街になるまで")
+                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                        .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
+                        .foregroundColor(Color(.gray))
+                    
+                    Button(action: {
+                        userSession.isNavigatingToLogin = true
+                    }) {
+                        Text("はじめる")
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                            .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
+                            .padding()
+                            .frame(width: UIScreen.main.bounds.width / 2)
+                            .background(RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(red: 255 / 255, green: 158 / 255, blue: 94 / 255))
+                                .shadow(color: .gray, radius: 5, x: 0, y: 4))
+                    }
+                    .padding(.vertical)
+                    .background(
+                        NavigationLink(destination: LoginView().environmentObject(userSession), isActive: $userSession.isNavigatingToLogin) { EmptyView() }
+                    )
                 }
-                .padding(.horizontal)
-                .background(
-                    NavigationLink(destination: LoginView().environmentObject(userSession), isActive: $userSession.isNavigatingToLogin) { EmptyView() }
-                )
             }
         }
     }
