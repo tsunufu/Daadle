@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import FirebaseDatabase
 
 struct BottomCardView: View {
     var areaScore: Double?
@@ -71,6 +72,7 @@ struct FullScreenMapView: View {
     @State private var showProfileView = false
     @State private var areaScore: Double?
     @State private var locationsCount: Int = 0
+    @State private var profileImageUrl: String?
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -78,23 +80,38 @@ struct FullScreenMapView: View {
                 .edgesIgnoringSafeArea(.all)
                 .onChange(of: locationManager.locations.count) { newCount in
                     if newCount != locationsCount {
-                        locationsCount = newCount // 位置情報の数を更新
-                        updatePolygonScore() // 面積スコアを更新
+                        locationsCount = newCount
+                        updatePolygonScore()
                     }
                 }
 
             VStack {
                 HStack {
                     Spacer() // 右寄せにするためのSpacer
-                    Image(systemName: "person.circle")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                        .padding()
-                        .onTapGesture {
-                            self.showProfileView = true
-                        }
+                    if let imageUrl = profileImageUrl, let url = URL(string: imageUrl) {
+                        RemoteImageView(url: url)
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white, lineWidth: 4)) // 白い縁を追加
+                            .shadow(radius: 3) // 必要に応じて影も追加できます
+                            .padding()
+                            .onTapGesture {
+                                self.showProfileView = true
+                            }
+                    } else {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white, lineWidth: 4)) // 白い縁を追加
+                            .shadow(radius: 3) // 必要に応じて影も追加できます
+                            .padding()
+                            .onTapGesture {
+                                self.showProfileView = true
+                            }
+                    }
                 }
                 Spacer()
             }
@@ -106,9 +123,23 @@ struct FullScreenMapView: View {
         .sheet(isPresented: $showProfileView) {
             ProfileView(userID: userUID)
         }
+        .onAppear {
+            fetchUserProfileImage()
+        }
     }
 
     func updatePolygonScore() {
         areaScore = locationManager.calculateAreaOfPolygon(coordinates: locationManager.locations)
+    }
+    
+    func fetchUserProfileImage() {
+        let imageUrlRef = Database.database().reference(withPath: "users/\(userUID)/profileImageUrl")
+        imageUrlRef.observeSingleEvent(of: .value) { snapshot in
+            if let imageUrlString = snapshot.value as? String {
+                DispatchQueue.main.async {
+                    self.profileImageUrl = imageUrlString
+                }
+            }
+        }
     }
 }
