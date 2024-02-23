@@ -24,6 +24,8 @@ struct ProfileView: View {
     @State private var selectedImage: UIImage? = nil
     var dataTask: URLSessionDataTask?
     @State private var imageUrl: String? = nil
+    @State private var isLoadingUserName = true
+    @State private var userNameLoadFailed = false
 
     let friendsList = [
             ("フレンド1", 13982, "B+"),
@@ -57,11 +59,18 @@ struct ProfileView: View {
 
     
     func fetchUserData() {
-//         ユーザーネームの取得
-        let usernameRef = Database.database().reference(withPath: "useras/\(userID)/username")
+        // ユーザーネームの取得
+        let usernameRef = Database.database().reference(withPath: "users/\(userID)/username")
         usernameRef.observeSingleEvent(of: .value) { snapshot in
-            if let username = snapshot.value as? String {
-                self.userName = username
+            DispatchQueue.main.async {
+                self.isLoadingUserName = false
+                if let username = snapshot.value as? String {
+                    self.userName = username
+                    self.userNameLoadFailed = false
+                } else {
+                    self.userName = "読み込みに失敗！"
+                    self.userNameLoadFailed = true
+                }
             }
         }
 
@@ -188,8 +197,8 @@ struct ProfileView: View {
                     } else {
                         Text(userName)
                             .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                            .foregroundColor(Color(.black))
                             .fontWeight(.bold)
+                            .foregroundColor(userNameLoadFailed ? .red : .black)
                     }
                     
                     Button(action: {
