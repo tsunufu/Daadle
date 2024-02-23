@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 import FirebaseDatabase
+import FirebaseAuth
 
 struct MapView: UIViewRepresentable {
     @ObservedObject var locationManager: LocationManager
@@ -24,6 +25,7 @@ struct MapView: UIViewRepresentable {
            
            updateUserLocationsOnMap(uiView)
            updateUserPolygonsOnMap(uiView)
+           updateUserAnotationsOnMap(uiView)
        }
 
        func makeCoordinator() -> Coordinator {
@@ -53,21 +55,59 @@ struct MapView: UIViewRepresentable {
            func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
                if let polyline = overlay as? MKPolyline {
                    let renderer = MKPolylineRenderer(polyline: polyline)
-                   renderer.strokeColor = .blue
+                   renderer.strokeColor = UIColor.clear
                    renderer.lineWidth = 4.0
                    return renderer
                } else if let polygon = overlay as? MKPolygon {
                    let renderer = MKPolygonRenderer(polygon: polygon)
-                   renderer.strokeColor = .purple
+                   
+                   if polygon.title == locationManager.currentUserID {
+                       renderer.fillColor = UIColor.red.withAlphaComponent(0.5)
+                       renderer.strokeColor = .red
+                   } else {
+                       renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
+                       renderer.strokeColor = .purple
+                   }
                    renderer.lineWidth = 4.0
-                   renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
                    return renderer
                }
                return MKOverlayRenderer(overlay: overlay)
            }
+           
+           func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+               // ユーザーの現在位置のアノテーションは無視する
+               if annotation is MKUserLocation {
+                   return nil
+               }
+
+               let annotationIdentifier = "UserLocationAnnotation"
+               var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: annotationIdentifier) as? MKAnnotationView
+
+               if annotationView == nil {
+                   annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: annotationIdentifier)
+                   annotationView?.canShowCallout = true
+               } else {
+                   annotationView?.annotation = annotation
+               }
+
+               if let customImage = UIImage(named: "userIcon") {
+                   let size = CGSize(width: 30, height: 30)
+                   UIGraphicsBeginImageContext(size)
+                   customImage.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+                   let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+                   UIGraphicsEndImageContext()
+
+                   annotationView?.image = resizedImage
+               }
+
+               return annotationView
+           }
+           
+           
        }
 
     }
+
 
 
 extension MapView {
@@ -76,6 +116,8 @@ extension MapView {
 
         let coordinates = locationManager.locations
         let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+        
+        
         
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         mapView.addOverlay(polyline)
@@ -106,13 +148,12 @@ extension MapView {
 
         let coordinates = locationManager.locations
         let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
-
+        polygon.title = "user1"
         mapView.addOverlay(polygon)
     }
 
     
     func updateUserLocationsOnMap(_ uiView: MKMapView) {
-        // すでに追加されているポリラインの識別子を格納する配列
         var existingPolylinesIds: [String] = uiView.overlays.compactMap { overlay in
             if let polyline = overlay as? MKPolyline, let polylineId = polyline.title {
                 return polylineId
@@ -156,11 +197,42 @@ extension MapView {
 
             let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
             polygon.title = userId
+            
+            if let userId = Auth.auth().currentUser?.uid {
+                print("現在のユーザーID: \(userId)")
+            } else {
+                print("ユーザーはログインしていません")
+            }
 
             // ポリゴンをマップビューに追加
             uiView.addOverlay(polygon)
         }
     }
+    
+    
+    func updateUserAnotationsOnMap(_ uiView: MKMapView) {
+        // 既存のアノテーションを取得し、ユーザーIDをキーとする辞書を作成
+        let existingAnnotations = uiView.annotations.compactMap { $0 as? UserLocationAnnotation }
+        let existingAnnotationsDict = Dictionary(uniqueKeysWithValues: existingAnnotations.map { ($0.userId, $0) })
+
+        for (userId, locationData) in locationManager.allUserLocations {
+            if let locationInfo = locationData as? [String: Any],
+               let latitude = locationInfo["latitude"] as? CLLocationDegrees,
+               let longitude = locationInfo["longitude"] as? CLLocationDegrees {
+                let newCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                
+                if let existingAnnotation = existingAnnotationsDict[userId] {
+                    existingAnnotation.coordinate = newCoordinate
+                    
+                    let coordinates = [existingAnnotation.coordinate, newCoordinate].compactMap { $0 }
+                } else {
+                    let annotation = UserLocationAnnotation(userId: userId, coordinate: newCoordinate, title: "aaa")
+                    uiView.addAnnotation(annotation)
+                }
+            }
+        }
+    }
+
 
 
 
