@@ -187,11 +187,20 @@ struct OnBoardingView: View {
                     let userRef = Database.database().reference(withPath: "users/\(user.uid)")
                     // ユーザーデータの確認と必要に応じて更新
                     userRef.observeSingleEvent(of: .value, with: { snapshot in
-                        // username の値を確認
+                        var updates = [String: Any]()
                         if let userData = snapshot.value as? [String: Any], let username = userData["username"] as? String, !username.isEmpty {
-                            // usernameが存在する場合は何もしない
+                            // usernameが存在する場合は何もしない
                         } else {
-                            userRef.updateChildValues(["username": "未設定ユーザー"])
+                            updates["username"] = "未設定ユーザー"
+                        }
+                        
+                        // 新しいユーザーの場合、デフォルトバッジを追加
+                        if snapshot.childSnapshot(forPath: "badges").childrenCount == 0 {
+                            updates["badges/badgeStart"] = true
+                        }
+                        
+                        if updates.count > 0 {
+                            userRef.updateChildValues(updates)
                         }
                     })
                 }

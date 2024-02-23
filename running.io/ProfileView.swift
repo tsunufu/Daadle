@@ -31,6 +31,7 @@ struct ProfileView: View {
     @State private var searchResults = [Friend]()
     @State private var showMessage = false
     @State private var showingSearchResults = false
+    @State private var userBadges: [String] = []
     
     init(userID: String, totalScore: Binding<Double>) {
         self.userID = userID
@@ -185,6 +186,20 @@ struct ProfileView: View {
                         }
                     }
                 }
+                
+                // バッジ情報の取得
+                let badgesRef = Database.database().reference(withPath: "users/\(userID)/badges")
+                badgesRef.observeSingleEvent(of: .value) { snapshot in
+                    var badges: [String] = []
+                    for child in snapshot.children {
+                        if let childSnapshot = child as? DataSnapshot, childSnapshot.value as? Bool ?? false {
+                            badges.append(childSnapshot.key)
+                        }
+                    }
+                    DispatchQueue.main.async {
+                        self.userBadges = badges // UIを更新するためにメインスレッドで実行
+                    }
+                 }
             }
 
             group.notify(queue: .main) {
@@ -230,7 +245,6 @@ struct ProfileView: View {
                     print(error?.localizedDescription ?? "URL取得エラー")
                     return
                 }
-                // ダウンロードURLをDatabaseに保存
                 saveImageUrlToDatabase(downloadURL.absoluteString)
             }
         }
@@ -329,14 +343,38 @@ struct ProfileView: View {
                 .padding(.horizontal, 32) // HStack全体に水平方向の余白を適用
                 .padding(.top, 16)
 
-                // バッジセクション
-//                HStack {
-//                    Image(systemName: "rosette")
-//                    Image(systemName: "crown")
-//                    Image(systemName: "star")
-//                }
+                // バッジを表示するセクション
+                VStack(alignment: .leading) {
+                       Text("取得したバッジ")
+                           .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                           .frame(maxWidth: .infinity)
+                           .multilineTextAlignment(.center)
+                           .padding(.leading, 10)
 
-
+                    // userBadges 配列が空でない場合のみ ScrollView を表示
+                    if !userBadges.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(alignment: .center, spacing: 10) {
+                                ForEach(userBadges, id: \.self) { badgeName in
+                                    Image(badgeName)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    } else {
+                        Text("バッジはまだありません")
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                            .foregroundColor(.gray)
+                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 10)
+                    }
+                }
+                .padding(.horizontal)
+                
                 // スコアセクション
                 HStack(spacing: 20) {
                     VStack {

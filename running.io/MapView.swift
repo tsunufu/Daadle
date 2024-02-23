@@ -254,8 +254,10 @@ extension MapView {
     
     
     func updateUserAnnotationsOnMap(_ uiView: MKMapView) {
-        let existingAnnotations = uiView.annotations.compactMap { $0 as? UserLocationAnnotation }
-        let existingAnnotationsDict = Dictionary(uniqueKeysWithValues: existingAnnotations.map { ($0.userId, $0) })
+        let groupedAnnotations = Dictionary(grouping: uiView.annotations.compactMap { $0 as? UserLocationAnnotation }) { $0.userId }
+        let uniqueAnnotations = groupedAnnotations.mapValues { annotations -> UserLocationAnnotation in
+            return annotations.first!
+        }
 
         for (userId, locationData) in locationManager.allUserLocations {
             if let locationInfo = locationData as? [String: Any],
@@ -265,17 +267,11 @@ extension MapView {
 
                 // Firebaseからユーザー名を取得
                 let userRef = Database.database().reference(withPath: "users/\(userId)/username")
-                userRef.observeSingleEvent(of: .value) { snapshot, error in
-                    // Error handling
-//                    if let error = error {
-//                        username = "Username not found"
-////                        print("Error fetching username: \(error.localizedDescription)")
-////                        return
-//                    }
+                userRef.observeSingleEvent(of: .value) { snapshot in
                     let username = snapshot.value as? String ?? "Unknown User"
 
                     DispatchQueue.main.async {
-                        if let existingAnnotation = existingAnnotationsDict[userId] {
+                        if let existingAnnotation = uniqueAnnotations[userId] {
                             existingAnnotation.coordinate = newCoordinate
                             existingAnnotation.title = username
                         } else {
@@ -288,5 +284,6 @@ extension MapView {
             }
         }
     }
+
 
 }
