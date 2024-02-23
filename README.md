@@ -1,5 +1,11 @@
 # HackU2024 制作作品
 
+<img width="350" alt="スクリーンショット 2024-02-23 22 31 41" src="https://github.com/tsunufu/Daadle/assets/73733296/2a01e062-bd14-466d-aa4a-64ca5aac41dc">
+
+
+
+
+
 ## 作品概要
 ### 塗ろう。自分の街になるまで。
 アプリ名の"Daadle"とはいたずら書きをする，という意味の"Doodle"とぶらぶら歩き回るという意味の単語，"Dawdle"を掛け合わせた造語です．<br>
