@@ -131,6 +131,15 @@ struct FullScreenMapView: View {
 
     func updatePolygonScore() {
         areaScore = locationManager.calculateAreaOfPolygon(coordinates: locationManager.locations)
+        // areaScoreをDatabaseに保存
+        let scoreRef = Database.database().reference(withPath: "users/\(userUID)/score")
+        scoreRef.setValue(areaScore) { error, _ in
+            if let error = error {
+                print("Error saving score: \(error.localizedDescription)")
+            } else {
+                print("Score saved successfully.")
+            }
+        }
     }
     
     func fetchUserProfileImage() {
