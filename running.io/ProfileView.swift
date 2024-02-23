@@ -7,18 +7,47 @@
 
 import Foundation
 import SwiftUI
+import FirebaseDatabase
 
 struct ProfileView: View {
-    let profileImageName = "defaultProfile" // デフォルトのプロフィール画像名
-    let userName = "あなたの名前"
-    let totalScore = 298489
-    let streaks = 12
-    let wins = 24
+    let profileImageName = "defaultProfile" // あとで変更する必要あり
+    @State private var userName = "ユーザー名を読み込み中..."
+    let totalScore = 298489 //  あとで変更する必要あり
+    let streaks = 12 // 変更必要
+    let wins = 24 // 変更必要
+    let userID: String
+    @State private var isEditing = false
+    @State private var draftUsername = "" // 編集中のユーザー名を一時保存
+
     let friendsList = [
             ("フレンド1", 13982, "B+"),
             ("フレンド2", 12500, "A"),
             ("フレンド3", 11800, "B"),
         ]
+    
+    func fetchUsername() {
+        let ref = Database.database().reference(withPath: "users/\(userID)/username")
+        ref.observeSingleEvent(of: .value) { snapshot in
+            if let username = snapshot.value as? String {
+                self.userName = username
+                self.draftUsername = username // 初期状態は現在のユーザー名
+            }
+        }
+    }
+    
+    // ユーザー名の更新処理
+    func updateUsername() {
+        let ref = Database.database().reference(withPath: "users/\(userID)/username")
+        ref.setValue(draftUsername) { error, _ in
+            if let error = error {
+                print("Error updating username: \(error.localizedDescription)")
+            } else {
+                print("Username updated successfully.")
+                self.userName = self.draftUsername // ローカルの状態を保存
+                self.isEditing = false // 編集モードをオフにする
+            }
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -33,12 +62,41 @@ struct ProfileView: View {
                     .shadow(radius: 10)
                     .padding(.top, 44)
 
-                // ユーザー名
-                Text(userName)
-                    .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                    .foregroundColor(Color(.black))
-                    .fontWeight(.bold)
-                    .padding(.top, 8)
+                
+                HStack {
+                    if isEditing {
+                        TextField("ユーザー名を入力", text: $draftUsername)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                            .padding(10)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                            .padding(.trailing, 10)
+                    } else {
+                        Text(userName)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                            .foregroundColor(Color(.black))
+                            .fontWeight(.bold)
+                    }
+                    
+                    Button(action: {
+                        if self.isEditing {
+                            self.updateUsername()
+                        } else {
+                            self.draftUsername = self.userName // 編集を開始する前に現在のユーザー名を保存
+                            self.isEditing = true
+                        }
+                    }) {
+                        if isEditing {
+                            Image(systemName: "checkmark.square.fill")
+                                .foregroundColor(.green)
+                        } else {
+                            Image("edit") // 'edit' という名前のカスタム画像を使用
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+                .padding(.horizontal, 32) // HStack全体に水平方向の余白を適用
+                .padding(.top, 16)
 
                 // バッジセクション
 //                HStack {
@@ -46,8 +104,7 @@ struct ProfileView: View {
 //                    Image(systemName: "crown")
 //                    Image(systemName: "star")
 //                }
-                .font(.title)
-                .padding(.top, 16)
+
 
                 // スコアセクション
                 HStack(spacing: 20) {
@@ -76,7 +133,7 @@ struct ProfileView: View {
 //                            .foregroundColor(.gray)
 //                    }
                 }
-                .padding(.top, 16)
+                .padding(.top, 12)
 
                 // フレンドリスト
                 VStack(alignment: .leading) {
@@ -115,13 +172,14 @@ struct ProfileView: View {
                 .padding(.bottom, 50) // 下部の余白
             }
         }
-        .background(Color.orange.opacity(0.2)) // 背景色
+        .background(Color.orange.opacity(0.2))
+        .onAppear(perform: fetchUsername)
     }
 }
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileView()
+        ProfileView(userID: "testUser")
             .previewDevice("iPhone 12") // 特定のデバイスでのプレビューを指定 (オプション)
     }
 }

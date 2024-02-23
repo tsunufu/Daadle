@@ -93,7 +93,8 @@ struct FullScreenMapView: View {
                 .offset(y: 50)
                 .edgesIgnoringSafeArea(.bottom)        }
         .sheet(isPresented: $showProfileView) {
-            ProfileView()
+            // プロフィールビューのコンテンツ
+            ProfileView(userID: userUID)
         }
     }
 }
