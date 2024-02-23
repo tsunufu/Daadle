@@ -41,6 +41,7 @@ struct ProfileView: View {
         let id: String
         let username: String
         let friendScore: Double
+        let imageUrl: String?
     }
     
     struct RemoteImageView: View {
@@ -83,10 +84,11 @@ struct ProfileView: View {
                    let dict = childSnapshot.value as? [String: Any],
                    let username = dict["username"] as? String {
                     let id = childSnapshot.key
-
                     let friendScore = dict["score"] as? Double ?? 0
+                    let imageUrl = dict["profileImageUrl"] as? String // Attempt to get the image URL
 
-                    let user = Friend(id: id, username: username, friendScore: friendScore)
+                    // Create the Friend instance with all expected properties
+                    let user = Friend(id: id, username: username, friendScore: friendScore, imageUrl: imageUrl)
                     results.append(user)
                 }
             }
@@ -173,16 +175,14 @@ struct ProfileView: View {
                 let userRef = Database.database().reference(withPath: "users/\(friendId)")
                 userRef.observeSingleEvent(of: .value) { userSnapshot in
                     defer { group.leave() }
-                    guard let userDict = userSnapshot.value as? [String: Any],
-                          let username = userDict["username"] as? String,
-                          let friendScore = userDict["score"] as? Double else {
-                        print("フレンドID \(friendId) のデータが不完全です。")
-                        return
-                    }
-
-                    let friend = Friend(id: friendId, username: username, friendScore: friendScore)
-                    DispatchQueue.main.async {
-                        self.friends.append(friend)
+                    if let userDict = userSnapshot.value as? [String: Any],
+                       let username = userDict["username"] as? String,
+                       let friendScore = userDict["score"] as? Double,
+                       let imageUrl = userDict["profileImageUrl"] as? String { // 画像URLを取得
+                        let friend = Friend(id: friendId, username: username, friendScore: friendScore, imageUrl: imageUrl)
+                        DispatchQueue.main.async {
+                            self.friends.append(friend)
+                        }
                     }
                 }
             }
@@ -455,17 +455,36 @@ struct ProfileView: View {
                             ForEach(friends.filter { friend in
                                 searchText.isEmpty || friend.username.localizedCaseInsensitiveContains(searchText)
                             }, id: \.id) { friend in
-                                VStack(alignment: .leading) {
-                                    Text(friend.username)
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                        .foregroundColor(.black)
-                                        .padding(.leading, 20)
+                                HStack {
+                                    if let imageUrl = friend.imageUrl, let url = URL(string: imageUrl) {
+                                        RemoteImageView(url: url)
+                                            .frame(width: 50, height: 50)
+                                            .clipShape(Circle())
+                                            .padding(.horizontal, 10)
+                                    } else {
+                                        Image(systemName: "person.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 50, height: 50)
+                                            .background(Color.gray.opacity(0.3))
+                                            .clipShape(Circle())
+                                    }
                                     
-                                    Text("スコア：\(friend.friendScore, specifier: "%.0f")") // totalScoreを表示
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
-                                        .foregroundColor(.gray)
-                                        .padding(.leading, 20)
+                                    VStack(alignment: .leading, spacing: 2) { // VStack内の要素が左揃えになるように設定
+                                        // ユーザー名を表示
+                                        Text(friend.username)
+                                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                            .foregroundColor(.black)
+                                        
+                                        // スコアを表示
+                                        Text("スコア：\(friend.friendScore, specifier: "%.0f")")
+                                            .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                                            .foregroundColor(.gray)
+                                    }
+                                    
+                                    Spacer() // HStack内の要素を左寄せにする
                                 }
+                                .padding(.vertical, 5) // 各アイテムの縦の間隔を設定
                                 Divider()
                             }
 //                            .padding(.vertical, 10)
