@@ -9,6 +9,8 @@ import SwiftUI
 import MapKit
 
 struct BottomCardView: View {
+    var areaScore: Double?
+    
     var body: some View {
         VStack {
             Capsule()
@@ -24,7 +26,7 @@ struct BottomCardView: View {
                     Text("開催期間 2/1~3/31")
                         .font(Font.custom("DelaGothicOne-Regular", size: 12))
                         .foregroundColor(.gray)
-                    Text("Score: 10298")
+                    Text("Score: \(areaScore != nil ? "\(Int(areaScore!))" : "null")")
                         .font(Font.custom("DelaGothicOne-Regular", size:12))
                     Text("次のバッジ獲得まであと4702")
                         .font(Font.custom("DelaGothicOne-Regular", size: 8))
@@ -67,16 +69,24 @@ struct FullScreenMapView: View {
     @ObservedObject private var locationManager = LocationManager()
     var userUID: String
     @State private var showProfileView = false
+    @State private var areaScore: Double?
+    @State private var locationsCount: Int = 0
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             MapView(locationManager: locationManager, userUID: userUID)
                 .edgesIgnoringSafeArea(.all)
+                .onChange(of: locationManager.locations.count) { newCount in
+                    if newCount != locationsCount {
+                        locationsCount = newCount // 位置情報の数を更新
+                        updatePolygonScore() // 面積スコアを更新
+                    }
+                }
 
             VStack {
                 HStack {
                     Spacer() // 右寄せにするためのSpacer
-                    Image(systemName: "person.circle") // あとでGoogleの画像になるよう置き換える
+                    Image(systemName: "person.circle")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 40, height: 40)
@@ -89,12 +99,16 @@ struct FullScreenMapView: View {
                 Spacer()
             }
 
-            BottomCardView()
+            BottomCardView(areaScore: areaScore)
                 .offset(y: 50)
-                .edgesIgnoringSafeArea(.bottom)        }
+                .edgesIgnoringSafeArea(.bottom)
+        }
         .sheet(isPresented: $showProfileView) {
-            // プロフィールビューのコンテンツ
             ProfileView(userID: userUID)
         }
+    }
+
+    func updatePolygonScore() {
+        areaScore = locationManager.calculateAreaOfPolygon(coordinates: locationManager.locations)
     }
 }

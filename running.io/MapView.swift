@@ -21,7 +21,6 @@ struct MapView: UIViewRepresentable {
            updatePolyline(for: uiView)
            updatePolygon(for: uiView)
            
-           
            updateUserLocationsOnMap(uiView)
            updateUserPolygonsOnMap(uiView)
        }
@@ -162,10 +161,4 @@ extension MapView {
         }
     }
 
-
-
-
-    }
-
-
-
+}
