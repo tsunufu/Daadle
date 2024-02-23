@@ -24,7 +24,7 @@ struct MapView: UIViewRepresentable {
            
            updateUserLocationsOnMap(uiView)
            updateUserPolygonsOnMap(uiView)
-           updateUserAnotationsOnMap(uiView)
+           updateUserAnnotationsOnMap(uiView)
        }
 
        func makeCoordinator() -> Coordinator {
@@ -253,8 +253,7 @@ extension MapView {
     }
     
     
-    func updateUserAnotationsOnMap(_ uiView: MKMapView) {
-        // 既存のアノテーションを取得し、ユーザーIDをキーとする辞書を作成
+    func updateUserAnnotationsOnMap(_ uiView: MKMapView) {
         let existingAnnotations = uiView.annotations.compactMap { $0 as? UserLocationAnnotation }
         let existingAnnotationsDict = Dictionary(uniqueKeysWithValues: existingAnnotations.map { ($0.userId, $0) })
 
@@ -263,18 +262,31 @@ extension MapView {
                let latitude = locationInfo["latitude"] as? CLLocationDegrees,
                let longitude = locationInfo["longitude"] as? CLLocationDegrees {
                 let newCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-                
-                if let existingAnnotation = existingAnnotationsDict[userId] {
-                    existingAnnotation.coordinate = newCoordinate
-                    
-                    let coordinates = [existingAnnotation.coordinate, newCoordinate].compactMap { $0 }
-                } else {
-                    let annotation = UserLocationAnnotation(userId: userId, coordinate: newCoordinate, title: "aaa")
-                    uiView.addAnnotation(annotation)
+
+                // Firebaseからユーザー名を取得
+                let userRef = Database.database().reference(withPath: "users/\(userId)/username")
+                userRef.observeSingleEvent(of: .value) { snapshot, error in
+                    // Error handling
+//                    if let error = error {
+//                        username = "Username not found"
+////                        print("Error fetching username: \(error.localizedDescription)")
+////                        return
+//                    }
+                    let username = snapshot.value as? String ?? "Unknown User"
+
+                    DispatchQueue.main.async {
+                        if let existingAnnotation = existingAnnotationsDict[userId] {
+                            existingAnnotation.coordinate = newCoordinate
+                            existingAnnotation.title = username
+                        } else {
+                            let annotation = UserLocationAnnotation(userId: userId, coordinate: newCoordinate, title: username)
+                            annotation.title = username
+                            uiView.addAnnotation(annotation)
+                        }
+                    }
                 }
             }
         }
     }
-
 
 }
