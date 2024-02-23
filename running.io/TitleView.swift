@@ -18,10 +18,10 @@ struct TitleView: View {
                     .edgesIgnoringSafeArea(.all)
                 
                 VStack {
-                    Image("logo")
+                    Image("appstore")
                         .resizable()
                         .scaledToFit()
-                        .frame(height: 200)
+                        .frame(height: 300)
                     
                     Text("Daadle")
                         .font(Font.custom("DelaGothicOne-Regular", size: 36))
