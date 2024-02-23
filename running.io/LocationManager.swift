@@ -9,21 +9,22 @@ import Foundation
 import CoreLocation
 import MapKit
 import FirebaseDatabase
+import FirebaseAuth
 
 class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var location: CLLocation?
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
     @Published var locations = [CLLocationCoordinate2D]()
-    @Published var allUserLocations: [String: [CLLocationCoordinate2D]] = [:]
+    @Published var allUserLocations: [String: [String: Any]] = [:]
     @Published var userLocationsHistory: [String: [CLLocationCoordinate2D]] = [:]
+    var currentUserID: String? = Auth.auth().currentUser?.uid
         
     var ref: DatabaseReference = Database.database().reference()
     
     func fetchOtherUsersLocation() {
         let dbRef = Database.database().reference()
-        // 現在のユーザーID。実際のアプリでは認証されたユーザーのIDを使用する。
-        let currentUserId = "currentUserId"
+        let currentUserId = ""
 
         dbRef.child("users").observe(.value, with: { snapshot in
             guard let usersDict = snapshot.value as? [String: AnyObject] else {
@@ -51,6 +52,37 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             }
         }
     }
+    
+    func fetchOtherUsersCurrentLocation() {
+            let dbRef = Database.database().reference()
+            let userId = ""
+
+            dbRef.child("users").observe(.value, with: { snapshot in
+                guard let usersDict = snapshot.value as? [String: AnyObject] else {
+                    DispatchQueue.main.async {
+                        print("エラー: データをデコードできませんでした")
+                    }
+                    return
+                }
+
+                var newLocations: [String: [String: Any]] = [:]
+                for (key, value) in usersDict where key != userId {
+                    if let locationDict = value["locations"] as? [String: AnyObject],
+                       let latitude = locationDict["latitude"] as? Double,
+                       let longitude = locationDict["longitude"] as? Double {
+                        print("ユーザー: \(key) - 緯度: \(latitude), 経度: \(longitude)")
+                        newLocations[key] = ["latitude": latitude, "longitude": longitude]
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.allUserLocations = newLocations
+                }
+            }) { error in
+                DispatchQueue.main.async {
+                    print(error.localizedDescription)
+                }
+            }
+        }
 
     func updateLocation(for userId: String, with newCoordinate: CLLocationCoordinate2D) {
         var coordinates = userLocationsHistory[userId] ?? []
@@ -74,6 +106,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         locationManager.delegate = self
         locationManager.startUpdatingLocation()
         fetchOtherUsersLocation()
+        fetchOtherUsersCurrentLocation()
     }
     
     func locationManager(_ manager: CLLocationManager,
