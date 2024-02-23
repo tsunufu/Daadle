@@ -98,10 +98,10 @@
 				F5BBD22A2B86E08900593866 /* OnBoardingView.swift */,
 				2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */,
 				2A2DB6E42B8834C10058044A /* UserLocation.swift */,
+				F5BBD2332B88460400593866 /* RemoteImageView.swift */,
 				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
 				2AD260782B7C433F000265A4 /* Assets.xcassets */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
-				F5BBD2332B88460400593866 /* RemoteImageView.swift */,
 			);
 			path = running.io;
 			sourceTree = "<group>";
