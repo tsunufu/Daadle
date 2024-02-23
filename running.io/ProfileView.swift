@@ -14,7 +14,6 @@ import FirebaseAuth
 struct ProfileView: View {
     let profileImageName = "defaultProfile" // あとで変更する必要あり
     @State private var userName = "ユーザー名を読み込み中..."
-    let totalScore = 298489 //  あとで変更する必要あり
     let streaks = 12 // 変更必要
     let wins = 24 // 変更必要
     let userID: String
@@ -26,6 +25,12 @@ struct ProfileView: View {
     @State private var imageUrl: String? = nil
     @State private var isLoadingUserName = true
     @State private var userNameLoadFailed = false
+    @Binding var totalScore: Double
+    
+    init(userID: String, totalScore: Binding<Double>) {
+        self.userID = userID
+        _totalScore = totalScore
+    }
 
     let friendsList = [
             ("フレンド1", 13982, "B+"),
@@ -232,7 +237,7 @@ struct ProfileView: View {
                 // スコアセクション
                 HStack(spacing: 20) {
                     VStack {
-                        Text("\(totalScore)")
+                        Text(String(format: "%.0f", totalScore))
                             .font(Font.custom("DelaGothicOne-Regular", size: 20))
                             .fontWeight(.bold)
                         Text("total score💪")
@@ -309,13 +314,6 @@ struct ProfileView: View {
 
         }
         .background(Color.orange.opacity(0.2))
-    }
-}
-
-struct ProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        ProfileView(userID: "testUser")
-            .previewDevice("iPhone 12") // 特定のデバイスでのプレビューを指定 (オプション)
     }
 }
 
