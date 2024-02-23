@@ -52,25 +52,32 @@ struct MapView: UIViewRepresentable {
            }
            
            func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-               if let polyline = overlay as? MKPolyline {
-                   let renderer = MKPolylineRenderer(polyline: polyline)
-                   renderer.strokeColor = UIColor.clear
-                   renderer.lineWidth = 4.0
-                   return renderer
-               } else if let polygon = overlay as? MKPolygon {
-                   let renderer = MKPolygonRenderer(polygon: polygon)
-                   
-                   if polygon.title == locationManager.currentUserID {
-                       renderer.fillColor = UIColor.red.withAlphaComponent(0.5)
-                       renderer.strokeColor = .red
-                   } else {
-                       renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
-                       renderer.strokeColor = .purple
-                   }
+               guard let polygon = overlay as? MKPolygon else {
+                   return MKOverlayRenderer(overlay: overlay)
+               }
+
+               let renderer = MKPolygonRenderer(polygon: polygon)
+
+               // 現在のユーザーIDを取得
+               guard let currentUserId = Auth.auth().currentUser?.uid else {
+                   // 現在のユーザーIDがnilの場合、デフォルトの色を設定して処理を続行
+                   renderer.fillColor = UIColor.gray.withAlphaComponent(0.5)
+                   renderer.strokeColor = .gray
                    renderer.lineWidth = 4.0
                    return renderer
                }
-               return MKOverlayRenderer(overlay: overlay)
+
+               // ポリゴンのタイトルが現在のユーザーIDと一致するかどうかで色を変更
+               if polygon.title == currentUserId {
+                   renderer.fillColor = UIColor.red.withAlphaComponent(0.5)
+                   renderer.strokeColor = .red
+               } else {
+                   renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
+                   renderer.strokeColor = .purple
+               }
+
+               renderer.lineWidth = 4.0
+               return renderer
            }
            
            func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -117,7 +124,6 @@ extension MapView {
         let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
         
         
-        
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         mapView.addOverlay(polyline)
         
@@ -145,10 +151,13 @@ extension MapView {
     func updatePolygon(for mapView: MKMapView) {
         mapView.overlays.forEach { if $0 is MKPolygon { mapView.removeOverlay($0) } }
 
-        let coordinates = locationManager.locations
-        let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
-        polygon.title = "user1"
-        mapView.addOverlay(polygon)
+        for (userId, coordinates) in locationManager.userLocationsHistory {
+            guard coordinates.count > 2 else { continue } // ポリゴンを形成するためには少なくとも3点が必要
+            
+            let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
+            polygon.title = userId // 実際のユーザーIDをタイトルに設定
+            mapView.addOverlay(polygon)
+        }
     }
 
     
@@ -189,22 +198,27 @@ extension MapView {
     }
     
     func updateUserPolygonsOnMap(_ uiView: MKMapView) {
-        uiView.overlays.forEach { if $0 is MKPolygon { uiView.removeOverlay($0) } }
+        let existingPolygons = uiView.overlays.compactMap { $0 as? MKPolygon }
+        let existingPolygonIds = Set(existingPolygons.map { $0.title ?? "" })
 
         for (userId, coordinates) in locationManager.userLocationsHistory {
             guard coordinates.count > 2 else { continue }
 
-            let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
-            polygon.title = userId
-            
-            if let userId = Auth.auth().currentUser?.uid {
-                print("現在のユーザーID: \(userId)")
-            } else {
-                print("ユーザーはログインしていません")
-            }
+            let newPolygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
+            newPolygon.title = userId
 
-            // ポリゴンをマップビューに追加
-            uiView.addOverlay(polygon)
+            // 既存のポリゴンを削除する前に新しいポリゴンを追加
+            uiView.addOverlay(newPolygon)
+
+            // 既存のポリゴンを更新するか新しいポリゴンを追加するか判断
+            if existingPolygonIds.contains(userId) {
+                // 既存のポリゴンを見つけて削除
+                if let existingPolygon = existingPolygons.first(where: { $0.title == userId }) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        uiView.removeOverlay(existingPolygon)
+                    }
+                }
+            }
         }
     }
     
