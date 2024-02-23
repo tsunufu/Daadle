@@ -18,26 +18,12 @@ struct MapView: UIViewRepresentable {
 
        func updateUIView(_ uiView: MKMapView, context: Context) {
            print("updateUIView is called")
-//           uiView.setRegion(locationManager.region, animated: true)
            updatePolyline(for: uiView)
            updatePolygon(for: uiView)
            
-           let allAnnotations = uiView.annotations
-           uiView.removeAnnotations(allAnnotations)
            
-           // allUserLocations を使用して、マップ上に各ユーザーの位置を表示
-           for (userId, locationData) in locationManager.allUserLocations {
-               if let latitude = locationData["latitude"] as? CLLocationDegrees,
-                  let longitude = locationData["longitude"] as? CLLocationDegrees {
-                   let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-                   let annotation = MKPointAnnotation()
-                   annotation.coordinate = coordinate
-                   annotation.title = userId // ユーザー名を設定して表示させた方がいいかも
-                   uiView.addAnnotation(annotation)
-                   
-                   print("ユーザーID: \(userId) - 位置: (\(latitude), \(longitude))")
-               }
-           }
+           updateUserLocationsOnMap(uiView)
+           updateUserPolygonsOnMap(uiView)
        }
 
        func makeCoordinator() -> Coordinator {
@@ -80,6 +66,7 @@ struct MapView: UIViewRepresentable {
                return MKOverlayRenderer(overlay: overlay)
            }
        }
+
     }
 
 
@@ -104,7 +91,7 @@ extension MapView {
         let timestamp = Int(Date().timeIntervalSince1970 * 1000)
         let locationData: [String: Any] = ["latitude": latitude, "longitude": longitude, "timestamp": timestamp]
         
-        // ユーザーIDに基づいて位置情報をFirebaseに保存（timestampをキーとして使用せず、配列のように保存）
+        // ユーザーIDに基づいて位置情報をFirebaseに保存
         ref.child("users").child(userUID).child("locations").setValue(locationData) { (error, reference) in
             if let error = error {
                 print("Data could not be saved: \(error.localizedDescription)")
@@ -122,5 +109,63 @@ extension MapView {
 
         mapView.addOverlay(polygon)
     }
-}
+
+    
+    func updateUserLocationsOnMap(_ uiView: MKMapView) {
+        // すでに追加されているポリラインの識別子を格納する配列
+        var existingPolylinesIds: [String] = uiView.overlays.compactMap { overlay in
+            if let polyline = overlay as? MKPolyline, let polylineId = polyline.title {
+                return polylineId
+            }
+            return nil
+        }
+
+        for (userId, coordinates) in locationManager.userLocationsHistory {
+            print("User ID: \(userId) has \(coordinates.count) coordinates.")
+
+            guard coordinates.count > 1 else { continue }
+
+            let polylineId = userId
+            let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+            polyline.title = polylineId
+
+            if existingPolylinesIds.contains(polylineId) {
+                if let index = uiView.overlays.firstIndex(where: { ($0 as? MKPolyline)?.title == polylineId }) {
+                    uiView.removeOverlay(uiView.overlays[index])
+                    uiView.addOverlay(polyline)
+                }
+            } else {
+                uiView.addOverlay(polyline)
+            }
+
+            existingPolylinesIds.removeAll { $0 == polylineId }
+        }
+
+        for polylineId in existingPolylinesIds {
+            if let index = uiView.overlays.firstIndex(where: { ($0 as? MKPolyline)?.title == polylineId }) {
+                uiView.removeOverlay(uiView.overlays[index])
+            }
+        }
+    }
+    
+    func updateUserPolygonsOnMap(_ uiView: MKMapView) {
+        uiView.overlays.forEach { if $0 is MKPolygon { uiView.removeOverlay($0) } }
+
+        for (userId, coordinates) in locationManager.userLocationsHistory {
+            guard coordinates.count > 2 else { continue }
+
+            let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
+            polygon.title = userId
+
+            // ポリゴンをマップビューに追加
+            uiView.addOverlay(polygon)
+        }
+    }
+
+
+
+
+    }
+
+
 

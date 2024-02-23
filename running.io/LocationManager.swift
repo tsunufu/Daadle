@@ -15,13 +15,15 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     var locationManager: CLLocationManager
     @Published  var region =  MKCoordinateRegion()
     @Published var locations = [CLLocationCoordinate2D]()
-    @Published var allUserLocations: [String: [String: Any]] = [:]
+    @Published var allUserLocations: [String: [CLLocationCoordinate2D]] = [:]
+    @Published var userLocationsHistory: [String: [CLLocationCoordinate2D]] = [:]
         
     var ref: DatabaseReference = Database.database().reference()
     
     func fetchOtherUsersLocation() {
         let dbRef = Database.database().reference()
-        let userId = ""
+        // 現在のユーザーID。実際のアプリでは認証されたユーザーのIDを使用する。
+        let currentUserId = "currentUserId"
 
         dbRef.child("users").observe(.value, with: { snapshot in
             guard let usersDict = snapshot.value as? [String: AnyObject] else {
@@ -31,17 +33,17 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
                 return
             }
 
-            var newLocations: [String: [String: Any]] = [:]
-            for (key, value) in usersDict where key != userId {
+            for (key, value) in usersDict where key != currentUserId {
                 if let locationDict = value["locations"] as? [String: AnyObject],
                    let latitude = locationDict["latitude"] as? Double,
                    let longitude = locationDict["longitude"] as? Double {
-                    print("ユーザー: \(key) - 緯度: \(latitude), 経度: \(longitude)")
-                    newLocations[key] = ["latitude": latitude, "longitude": longitude]
+                    let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                    
+                    // 新しい座標をユーザーの位置情報履歴に追加する処理
+                    DispatchQueue.main.async {
+                        self.updateLocation(for: key, with: coordinate)
+                    }
                 }
-            }
-            DispatchQueue.main.async {
-                self.allUserLocations = newLocations
             }
         }) { error in
             DispatchQueue.main.async {
@@ -49,6 +51,13 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             }
         }
     }
+
+    func updateLocation(for userId: String, with newCoordinate: CLLocationCoordinate2D) {
+        var coordinates = userLocationsHistory[userId] ?? []
+        coordinates.append(newCoordinate) // 新しい座標を追加
+        userLocationsHistory[userId] = coordinates // 更新された配列を保存
+    }
+
 
     
     override init() {
