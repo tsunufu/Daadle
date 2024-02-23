@@ -34,6 +34,7 @@ struct MapView: UIViewRepresentable {
        class Coordinator: NSObject, CLLocationManagerDelegate, MKMapViewDelegate {
            var parent: MapView
            var locationManager: LocationManager
+           var imageLoaders: [String: ImageLoader] = [:]
 
            init(_ parent: MapView, locationManager: LocationManager) {
                self.parent = parent
@@ -96,25 +97,54 @@ struct MapView: UIViewRepresentable {
                    annotationView?.annotation = annotation
                }
 
-               if let customImage = UIImage(named: "userIcon") {
-                   let size = CGSize(width: 30, height: 30)
-                   UIGraphicsBeginImageContext(size)
-                   customImage.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
-                   let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
-                   UIGraphicsEndImageContext()
+               if let userId = (annotation as? UserLocationAnnotation)?.userId {
+                   let imageLoader = imageLoaders[userId] ?? ImageLoader()
+                   imageLoaders[userId] = imageLoader
 
-                   annotationView?.image = resizedImage
+                   let imageUrlRef = Database.database().reference(withPath: "users/\(userId)/profileImageUrl")
+                   imageUrlRef.observeSingleEvent(of: .value) { snapshot in
+                       if let imageUrlString = snapshot.value as? String, let url = URL(string: imageUrlString) {
+                           imageLoader.load(fromURL: url)
+
+                           imageLoader.$image.sink { [weak annotationView] downloadedImage in
+                               guard let downloadedImage = downloadedImage else {
+                                   DispatchQueue.main.async {
+                                       annotationView?.image = UIImage(systemName: "person.circle.fill")
+                                   }
+                                   return
+                               }
+                               DispatchQueue.main.async {
+                                   let size = CGSize(width: 30, height: 30)
+                                   UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+
+                                   // 丸いクリップパスの作成
+                                   let path = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+                                   path.addClip()
+
+                                   downloadedImage.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+
+                                   // 白い枠線の追加
+                                   UIColor.white.setStroke()
+                                   path.lineWidth = 2
+                                   path.stroke()
+
+                                   let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+                                   UIGraphicsEndImageContext()
+                                   annotationView?.image = resizedImage
+                               }
+                           }.store(in: &imageLoader.cancellables)
+                       } else {
+                           DispatchQueue.main.async {
+                               annotationView?.image = UIImage(systemName: "person.circle.fill")
+                           }
+                       }
+                   }
                }
 
                return annotationView
            }
-           
-           
        }
-
     }
-
-
 
 extension MapView {
     func updatePolyline(for mapView: MKMapView) {
