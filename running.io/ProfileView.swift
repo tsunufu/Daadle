@@ -25,12 +25,10 @@ struct ProfileView: View {
     var dataTask: URLSessionDataTask?
     @State private var imageUrl: String? = nil
 
-    // 仮のフレンドのランキングデータ
     let friendsList = [
             ("フレンド1", 13982, "B+"),
             ("フレンド2", 12500, "A"),
             ("フレンド3", 11800, "B"),
-            // 他のフレンドのスコアデータ...
         ]
     
     struct RemoteImageView: View {
@@ -219,7 +217,6 @@ struct ProfileView: View {
 //                    Image(systemName: "rosette")
 //                    Image(systemName: "crown")
 //                    Image(systemName: "star")
-//                    // 実際のバッジ画像に置き換えてください
 //                }
 
 
