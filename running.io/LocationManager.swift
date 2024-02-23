@@ -76,9 +76,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         fetchOtherUsersLocation()
     }
     
-    
-    
-    
     func locationManager(_ manager: CLLocationManager,
                          didUpdateLocations locations: [CLLocation], didChangeAuthorization status: CLAuthorizationStatus){
         
@@ -86,7 +83,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             locationManager.allowsBackgroundLocationUpdates = true
             locationManager.startUpdatingLocation()
         }
-        
         
         guard let newLocation = locations.last else { return }
 
@@ -108,5 +104,35 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         if location.horizontalAccuracy > 100 { return false }
 
         return true
+    }
+}
+
+extension LocationManager {
+    func calculateAreaOfPolygon(coordinates: [CLLocationCoordinate2D]) -> Double {
+        guard coordinates.count > 2 else { return 0 }
+
+        var area: Double = 0
+        let earthRadiusKm = 6371.0
+
+        for i in 0..<coordinates.count {
+            let p1 = coordinates[i]
+            let p2 = coordinates[(i + 1) % coordinates.count] // Ensure the last point connects to the first
+
+            let lat1 = p1.latitude * .pi / 180
+            let lon1 = p1.longitude * .pi / 180
+            let lat2 = p2.latitude * .pi / 180
+            let lon2 = p2.longitude * .pi / 180
+
+            // Convert lat/long from degrees to radians
+            let dLon = lon2 - lon1
+
+            // Use spherical excess formula
+            let partialArea = atan2(sin(dLon) * cos(lat2), cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon))
+            area += partialArea
+        }
+
+        area = abs(area * earthRadiusKm * earthRadiusKm)
+
+        return area/1000000
     }
 }
