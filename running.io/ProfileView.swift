@@ -40,6 +40,7 @@ struct ProfileView: View {
     struct Friend {
         let id: String
         let username: String
+        let friendScore: Double
     }
     
     struct RemoteImageView: View {
@@ -75,14 +76,17 @@ struct ProfileView: View {
         self.showMessage = false
         
         let usersRef = Database.database().reference(withPath: "users")
-        usersRef.queryOrdered(byChild: "username").queryStarting(atValue: searchQuery).queryEnding(atValue: searchQuery+"\u{f8ff}").observeSingleEvent(of: .value) { snapshot in
+        usersRef.queryOrdered(byChild: "username").queryStarting(atValue: searchQuery).queryEnding(atValue: searchQuery + "\u{f8ff}").observeSingleEvent(of: .value) { snapshot in
             var results = [Friend]()
             for child in snapshot.children {
                 if let childSnapshot = child as? DataSnapshot,
                    let dict = childSnapshot.value as? [String: Any],
                    let username = dict["username"] as? String {
                     let id = childSnapshot.key
-                    let user = Friend(id: id, username: username)
+
+                    let friendScore = dict["score"] as? Double ?? 0
+
+                    let user = Friend(id: id, username: username, friendScore: friendScore)
                     results.append(user)
                 }
             }
@@ -128,25 +132,63 @@ struct ProfileView: View {
                 }
             }
         }
+        
+        let scoreRef = Database.database().reference(withPath: "users/\(userID)/score")
+        scoreRef.observeSingleEvent(of: .value) { snapshot in
+            if let score = snapshot.value as? Double {
+                DispatchQueue.main.async {
+                    self.totalScore = score
+                }
+            }
+        }
     }
     
     func fetchFriends() {
         let friendsRef = Database.database().reference(withPath: "users/\(userID)/friends")
         friendsRef.observeSingleEvent(of: .value) { snapshot in
-            guard let friendIds = snapshot.value as? [String: Bool] else {
+            if !snapshot.exists() {
+                print("フレンドリストが存在しません。")
+                return
+            }
+
+            guard let friendIdsDict = snapshot.value as? [String: Bool] else {
+                print("フレンドのデータ形式が不正です。")
+                return
+            }
+
+            let friendIds = Array(friendIdsDict.keys)
+            print("取得したフレンドID: \(friendIds)")
+
+            if friendIds.isEmpty {
                 print("フレンドがいません🥺")
                 return
             }
-            
-            for friendId in friendIds.keys {
-                let userRef = Database.database().reference(withPath: "users/\(friendId)/username")
+
+            self.friends.removeAll()
+
+            let group = DispatchGroup()
+
+            for friendId in friendIds {
+                group.enter()
+                let userRef = Database.database().reference(withPath: "users/\(friendId)")
                 userRef.observeSingleEvent(of: .value) { userSnapshot in
-                    if let username = userSnapshot.value as? String {
-                        DispatchQueue.main.async {
-                            self.friends.append(Friend(id: friendId, username: username))
-                        }
+                    defer { group.leave() }
+                    guard let userDict = userSnapshot.value as? [String: Any],
+                          let username = userDict["username"] as? String,
+                          let friendScore = userDict["score"] as? Double else {
+                        print("フレンドID \(friendId) のデータが不完全です。")
+                        return
+                    }
+
+                    let friend = Friend(id: friendId, username: username, friendScore: friendScore)
+                    DispatchQueue.main.async {
+                        self.friends.append(friend)
                     }
                 }
+            }
+
+            group.notify(queue: .main) {
+                print("フレンドデータの取得が完了しました。フレンド数: \(self.friends.count)")
             }
         }
     }
@@ -413,13 +455,18 @@ struct ProfileView: View {
                             ForEach(friends.filter { friend in
                                 searchText.isEmpty || friend.username.localizedCaseInsensitiveContains(searchText)
                             }, id: \.id) { friend in
-                                Text(friend.username)
-                                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                    .foregroundColor(.black)
-                                    .padding(.leading, 20)
-                                
+                                VStack(alignment: .leading) {
+                                    Text(friend.username)
+                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                        .foregroundColor(.black)
+                                        .padding(.leading, 20)
+                                    
+                                    Text("スコア：\(friend.friendScore, specifier: "%.0f")") // totalScoreを表示
+                                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                                        .foregroundColor(.gray)
+                                        .padding(.leading, 20)
+                                }
                                 Divider()
-                                
                             }
 //                            .padding(.vertical, 10)
                         }
