@@ -26,17 +26,21 @@ struct ProfileView: View {
     @State private var isLoadingUserName = true
     @State private var userNameLoadFailed = false
     @Binding var totalScore: Double
+    @State private var friends = [Friend]()
+    @State private var searchText = ""
+    @State private var searchResults = [Friend]()
+    @State private var showMessage = false
+    @State private var showingSearchResults = false
     
     init(userID: String, totalScore: Binding<Double>) {
         self.userID = userID
         _totalScore = totalScore
     }
-
-    let friendsList = [
-            ("フレンド1", 13982, "B+"),
-            ("フレンド2", 12500, "A"),
-            ("フレンド3", 11800, "B"),
-        ]
+    
+    struct Friend {
+        let id: String
+        let username: String
+    }
     
     struct RemoteImageView: View {
         @StateObject private var imageLoader = ImageLoader()
@@ -62,9 +66,45 @@ struct ProfileView: View {
         }
     }
 
+    func fetchUsers(searchQuery: String) {
+        if searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.showMessage = true
+            self.searchResults = []
+            return
+        }
+        self.showMessage = false
+        
+        let usersRef = Database.database().reference(withPath: "users")
+        usersRef.queryOrdered(byChild: "username").queryStarting(atValue: searchQuery).queryEnding(atValue: searchQuery+"\u{f8ff}").observeSingleEvent(of: .value) { snapshot in
+            var results = [Friend]()
+            for child in snapshot.children {
+                if let childSnapshot = child as? DataSnapshot,
+                   let dict = childSnapshot.value as? [String: Any],
+                   let username = dict["username"] as? String {
+                    let id = childSnapshot.key
+                    let user = Friend(id: id, username: username)
+                    results.append(user)
+                }
+            }
+            DispatchQueue.main.async {
+                self.searchResults = results
+            }
+        }
+    }
+    
+    func addFriend(_ friendId: String) {
+        let currentUserRef = Database.database().reference(withPath: "users/\(userID)/friends/\(friendId)")
+        currentUserRef.setValue(true) { error, _ in
+            if let error = error {
+                print("フレンドの追加に失敗しました: \(error.localizedDescription)")
+            } else {
+                print("フレンドが正常に追加されました")
+                fetchFriends()
+            }
+        }
+    }
     
     func fetchUserData() {
-        // ユーザーネームの取得
         let usernameRef = Database.database().reference(withPath: "users/\(userID)/username")
         usernameRef.observeSingleEvent(of: .value) { snapshot in
             DispatchQueue.main.async {
@@ -85,6 +125,27 @@ struct ProfileView: View {
             if let imageUrlString = snapshot.value as? String {
                 DispatchQueue.main.async {
                     self.imageUrl = imageUrlString // Firebaseから取得した画像のURLを更新
+                }
+            }
+        }
+    }
+    
+    func fetchFriends() {
+        let friendsRef = Database.database().reference(withPath: "users/\(userID)/friends")
+        friendsRef.observeSingleEvent(of: .value) { snapshot in
+            guard let friendIds = snapshot.value as? [String: Bool] else {
+                print("フレンドがいません🥺")
+                return
+            }
+            
+            for friendId in friendIds.keys {
+                let userRef = Database.database().reference(withPath: "users/\(friendId)/username")
+                userRef.observeSingleEvent(of: .value) { userSnapshot in
+                    if let username = userSnapshot.value as? String {
+                        DispatchQueue.main.async {
+                            self.friends.append(Friend(id: friendId, username: username))
+                        }
+                    }
                 }
             }
         }
@@ -265,41 +326,114 @@ struct ProfileView: View {
 
                 // フレンドリスト
                 VStack(alignment: .leading) {
-                    ForEach(friendsList, id: \.0) { friend in
-                        VStack {
-                            HStack {
-                                Image(systemName: "person.circle") // Googleで引っ張ってきた画像を表示させる
-                                    .resizable()
-                                    .frame(width: 36, height: 36)
-                                    .clipShape(Circle())
-                                    .padding(.trailing, 8)
-                                
-                                VStack(alignment: .leading) {
-                                    Text(friend.0)
+                    HStack {
+                        TextField("フレンドを検索", text: $searchText)
+                            .onChange(of: searchText) { newValue in
+                                if newValue.isEmpty {
+                                    showingSearchResults = false
+                                }
+                            }
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                            .padding(7)
+                            .padding(.horizontal, 25)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .overlay(
+                                HStack {
+                                    Image(systemName: "magnifyingglass")
+                                        .foregroundColor(.gray)
+                                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                                        .padding(.leading, 8)
+                                    
+                                    if !searchText.isEmpty {
+                                        Button(action: {
+                                            self.searchText = ""
+                                        }) {
+                                            Image(systemName: "multiply.circle.fill")
+                                                .foregroundColor(.gray)
+                                                .padding(.trailing, 8)
+                                        }
+                                    }
+                                }
+                            )
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                        
+                        Button(action: {
+                            fetchUsers(searchQuery: searchText)
+                            showingSearchResults = true // 検索ボタンが押されたことを示す
+                        }) {
+                            Image(systemName: "magnifyingglass")
+                        }
+                        .padding(.trailing, 10)
+                    }
+                    .padding(.vertical, 10)
+                    
+                    if showingSearchResults {
+                        if searchResults.isEmpty {
+                            Text("該当するユーザーが見つかりませんでした")
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                .foregroundColor(.gray)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+                                .padding(.vertical, 10)
+                        } else {
+                            ForEach(searchResults, id: \.id) { user in
+                                HStack {
+                                    Text(user.username)
                                         .font(Font.custom("DelaGothicOne-Regular", size: 16))
                                         .foregroundColor(.black)
-                                    Text("\(friend.1) points")
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 10))
-                                        .foregroundColor(.gray)
+                                        .padding(.vertical, 2)
+                                        .padding(.leading, 20) // 左側からの距離を調整
+                                    
+                                    Spacer() // テキストとボタンの間にスペースを作る
+                                    
+                                    Button("追加") {
+                                        addFriend(user.id)
+                                    }
+                                    .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                                    .padding(.trailing, 20)
                                 }
-                                Spacer() // 中央のスペースを作成する
-                                Text(friend.2)
+                                .padding(.leading, 20)
+                                
+                                Divider()
+                            }
+                        }
+                    } else {
+                        if friends.isEmpty {
+                            Text("フレンドがいません🥺")
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                .foregroundColor(.gray)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+                                .padding(.vertical, 10)
+
+                            Spacer()
+                        } else {
+                            ForEach(friends.filter { friend in
+                                searchText.isEmpty || friend.username.localizedCaseInsensitiveContains(searchText)
+                            }, id: \.id) { friend in
+                                Text(friend.username)
                                     .font(Font.custom("DelaGothicOne-Regular", size: 16))
                                     .foregroundColor(.black)
+                                    .padding(.leading, 20)
+                                
+                                Divider()
+                                
                             }
-                            .padding(.vertical, 10) // 上下に余白を追加して隙間を作る
+//                            .padding(.vertical, 10)
                         }
-                        Divider() // 各フレンドごとに線を引く
-//                        .padding(.leading, 24) // Dividerの左側に余白を追加する（アイコンの幅に合わせる）
                     }
-                    .padding(.horizontal)
                 }
                 .background(Color.white)
                 .cornerRadius(10)
                 .padding()
-                .padding(.bottom, 50) // 下部の余白
+                .padding(.bottom, 50)
             }
-            .onAppear(perform: fetchUserData)
+            .onAppear(perform: {
+                fetchUserData()
+                fetchFriends()
+            })
             .onDisappear {
                 self.dataTask?.cancel()
             }
