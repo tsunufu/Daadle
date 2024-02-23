@@ -8,6 +8,8 @@
 import Foundation
 import SwiftUI
 import FirebaseDatabase
+import FirebaseStorage
+import FirebaseAuth
 
 struct ProfileView: View {
     let profileImageName = "defaultProfile" // あとで変更する必要あり
@@ -18,6 +20,10 @@ struct ProfileView: View {
     let userID: String
     @State private var isEditing = false
     @State private var draftUsername = "" // 編集中のユーザー名を一時保存
+    @State private var isImagePickerPresented = false
+    @State private var selectedImage: UIImage? = nil
+    var dataTask: URLSessionDataTask?
+    @State private var imageUrl: String? = nil
 
     let friendsList = [
             ("フレンド1", 13982, "B+"),
@@ -25,12 +31,47 @@ struct ProfileView: View {
             ("フレンド3", 11800, "B"),
         ]
     
-    func fetchUsername() {
-        let ref = Database.database().reference(withPath: "users/\(userID)/username")
-        ref.observeSingleEvent(of: .value) { snapshot in
+    struct RemoteImageView: View {
+        @StateObject private var imageLoader = ImageLoader()
+        let url: URL
+
+        var body: some View {
+            Group {
+                if let image = imageLoader.image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } else {
+                    // プレースホルダー画像やローディングインディケーターを表示
+                    Image(systemName: "people.circle")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundColor(.gray)
+                }
+            }
+            .onAppear {
+                imageLoader.load(fromURL: url)
+            }
+        }
+    }
+
+    
+    func fetchUserData() {
+//         ユーザーネームの取得
+        let usernameRef = Database.database().reference(withPath: "useras/\(userID)/username")
+        usernameRef.observeSingleEvent(of: .value) { snapshot in
             if let username = snapshot.value as? String {
                 self.userName = username
-                self.draftUsername = username // 初期状態は現在のユーザー名
+            }
+        }
+
+        // プロフィール画像のURLの取得
+        let imageUrlRef = Database.database().reference(withPath: "users/\(userID)/profileImageUrl")
+        imageUrlRef.observeSingleEvent(of: .value) { snapshot in
+            if let imageUrlString = snapshot.value as? String {
+                DispatchQueue.main.async {
+                    self.imageUrl = imageUrlString // Firebaseから取得した画像のURLを更新
+                }
             }
         }
     }
@@ -48,21 +89,94 @@ struct ProfileView: View {
             }
         }
     }
+    
+    func uploadImageToFirebase(_ image: UIImage) {
+        if Auth.auth().currentUser == nil {
+            print("ユーザーはログインしていません。")
+            // UIを後々追加
+            return
+        }
+        
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+        let storage = Storage.storage(url: "gs://hacku-hamayoko.appspot.com")
+        let storageRef = storage.reference(withPath: "UserImages/\(userID).jpg")
+        let uploadTask = storageRef.putData(imageData, metadata: nil) { metadata, error in
+            if let error = error {
+              print("アップロードエラー: \(error.localizedDescription)")
+              // アップロード失敗のUI作成を後々やる
+              return
+            }
+
+            storageRef.downloadURL { url, error in
+                guard let downloadURL = url else {
+                    // URL取得エラー
+                    print(error?.localizedDescription ?? "URL取得エラー")
+                    return
+                }
+                // ダウンロードURLをDatabaseに保存
+                saveImageUrlToDatabase(downloadURL.absoluteString)
+            }
+        }
+        let observer = uploadTask.observe(.progress) { snapshot in
+            let percentComplete = 100.0 * Double(snapshot.progress!.completedUnitCount)
+              / Double(snapshot.progress!.totalUnitCount)
+            print("アップロード進捗: \(percentComplete)%")
+            // 必要に応じてUIを更新するコードをここに追加します。
+        }
+    }
+    
+    func saveImageUrlToDatabase(_ url: String) {
+        let ref = Database.database().reference(withPath: "users/\(userID)/profileImageUrl")
+        ref.setValue(url) { error, _ in
+            if let error = error {
+                print("プロフィール画像のURL保存エラー: \(error.localizedDescription)")
+            } else {
+                print("プロフィール画像のURLが成功的に保存されました。")
+            }
+        }
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .center) {
                 // プロフィール画像
-                Image(profileImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                    .shadow(radius: 10)
-                    .padding(.top, 44)
+                if let selectedImage = selectedImage {
+                    Image(uiImage: selectedImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                        .shadow(radius: 10)
+                        .padding(.top, 44)
+                        .onTapGesture {
+                            self.isImagePickerPresented = true
+                        }
+                } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
+                    RemoteImageView(url: url)
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                        .shadow(radius: 10)
+                        .padding(.top, 44)
+                        .onTapGesture {
+                            self.isImagePickerPresented = true
+                        }
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                        .shadow(radius: 10)
+                        .padding(.top, 44)
+                        .onTapGesture {
+                            self.isImagePickerPresented = true
+                        }
+                }
 
-                
                 HStack {
                     if isEditing {
                         TextField("ユーザー名を入力", text: $draftUsername)
@@ -171,9 +285,21 @@ struct ProfileView: View {
                 .padding()
                 .padding(.bottom, 50) // 下部の余白
             }
+            .onAppear(perform: fetchUserData)
+            .onDisappear {
+                self.dataTask?.cancel()
+            }
+            .sheet(isPresented: $isImagePickerPresented) {
+                ImagePicker(selectedImage: $selectedImage)
+            }
+            .onChange(of: selectedImage) { newImage in
+                if let image = newImage {
+                    self.uploadImageToFirebase(image)
+                }
+            }
+
         }
         .background(Color.orange.opacity(0.2))
-        .onAppear(perform: fetchUsername)
     }
 }
 
@@ -181,5 +307,37 @@ struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
         ProfileView(userID: "testUser")
             .previewDevice("iPhone 12") // 特定のデバイスでのプレビューを指定 (オプション)
+    }
+}
+
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+    @Environment(\.presentationMode) private var presentationMode
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = context.coordinator
+        return imagePicker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        var parent: ImagePicker
+
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+                parent.selectedImage = image // 選択された画像を更新
+            }
+            parent.presentationMode.wrappedValue.dismiss() // 画像ピッカーを閉じる
+        }
     }
 }
