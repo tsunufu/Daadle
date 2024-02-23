@@ -37,6 +37,10 @@ struct OnBoardingView: View {
                             .font(Font.custom("DelaGothicOne-Regular", size: 16))
                             .padding()
                         
+                        Image("walkthrough1")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .padding()
                     }
                     
                     VStack(spacing: 20) {
@@ -53,6 +57,19 @@ struct OnBoardingView: View {
                             .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
                             .font(Font.custom("DelaGothicOne-Regular", size: 16))
                             .padding()
+                        
+                        HStack(spacing: 10) {
+                            
+                            Image("walkthrough2-1")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                            
+                            Image("walkthrough2-2")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                        }
+                        .padding()
+                        
                     }
                     
                     VStack(spacing: 20) {
@@ -69,6 +86,21 @@ struct OnBoardingView: View {
                             .foregroundColor(Color(red: 0.302, green: 0.302, blue: 0.302))
                             .font(Font.custom("DelaGothicOne-Regular", size: 16))
                             .padding()
+                        
+                        HStack(alignment: .center, spacing: 0) {
+                                Image("badge1")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+
+                                Image("badge2")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+
+                                Image("badge3")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            }
+                            .padding(.horizontal, 20)
                         
                     }
                     
@@ -151,15 +183,14 @@ struct OnBoardingView: View {
                     self.userSession.userUID = user.uid
                     self.userSession.isSignedIn = true
                     
-                    // 新しいユーザーの場合はデフォルトのユーザー名を設定する
+                    // 新しいユーザーの場合はデフォルトのユーザー名を設定
                     let userRef = Database.database().reference(withPath: "users/\(user.uid)")
                     // ユーザーデータの確認と必要に応じて更新
                     userRef.observeSingleEvent(of: .value, with: { snapshot in
                         // username の値を確認
                         if let userData = snapshot.value as? [String: Any], let username = userData["username"] as? String, !username.isEmpty {
-                            // username が存在し、値がアサインされている場合は何もしない
+                            // usernameが存在する場合は何もしない
                         } else {
-                            // username が存在しないか、値が空の場合は "未設定ユーザー" として設定
                             userRef.updateChildValues(["username": "未設定ユーザー"])
                         }
                     })
