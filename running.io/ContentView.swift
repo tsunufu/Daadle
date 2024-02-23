@@ -87,14 +87,13 @@ struct FullScreenMapView: View {
 
             VStack {
                 HStack {
-                    Spacer() // 右寄せにするためのSpacer
                     if let imageUrl = profileImageUrl, let url = URL(string: imageUrl) {
                         RemoteImageView(url: url)
                             .scaledToFit()
                             .frame(width: 40, height: 40)
                             .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4)) // 白い縁を追加
-                            .shadow(radius: 3) // 必要に応じて影も追加できます
+                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                            .shadow(radius: 3)
                             .padding()
                             .onTapGesture {
                                 self.showProfileView = true
@@ -104,14 +103,16 @@ struct FullScreenMapView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 40, height: 40)
+                            .background(Color.white)
                             .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4)) // 白い縁を追加
-                            .shadow(radius: 3) // 必要に応じて影も追加できます
+                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                            .shadow(radius: 3)
                             .padding()
                             .onTapGesture {
                                 self.showProfileView = true
                             }
                     }
+                    Spacer()
                 }
                 Spacer()
             }
