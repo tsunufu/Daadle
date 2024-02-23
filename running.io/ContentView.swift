@@ -66,14 +66,13 @@ struct BottomCardView: View {
 struct FullScreenMapView: View {
     @ObservedObject private var locationManager = LocationManager()
     var userUID: String
-    @State private var showProfileView = false // プロフィールビュー表示用の状態変数
+    @State private var showProfileView = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             MapView(locationManager: locationManager, userUID: userUID)
-                .edgesIgnoringSafeArea(.all) // MapViewが全方向のsafeAreaを無視
+                .edgesIgnoringSafeArea(.all)
 
-            // プロフィール画像
             VStack {
                 HStack {
                     Spacer() // 右寄せにするためのSpacer
@@ -84,16 +83,15 @@ struct FullScreenMapView: View {
                         .clipShape(Circle())
                         .padding()
                         .onTapGesture {
-                            self.showProfileView = true // プロフィールビューを表示
+                            self.showProfileView = true
                         }
                 }
-                Spacer() // 全体のレイアウトを整えるためのSpacer
+                Spacer()
             }
 
             BottomCardView()
-                .offset(y: 50) // SafeAreaで無視できなかったからそもそもずらした、けどこれ実装方法としてはカスだよな
-                .edgesIgnoringSafeArea(.bottom) // BottomCardViewが下部のsafeAreaを無視
-        }
+                .offset(y: 50)
+                .edgesIgnoringSafeArea(.bottom)        }
         .sheet(isPresented: $showProfileView) {
             // プロフィールビューのコンテンツ
             ProfileView(userID: userUID)
