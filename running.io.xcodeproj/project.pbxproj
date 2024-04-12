@@ -85,22 +85,13 @@
 		2AD260732B7C433E000265A4 /* running.io */ = {
 			isa = PBXGroup;
 			children = (
+				F5C72EED2BC9292200BE0843 /* Models */,
+				F5C72EEC2BC9291100BE0843 /* Resources */,
+				F5C72EEB2BC928DD00BE0843 /* Utilities */,
+				F5C72EEA2BC928AF00BE0843 /* Views */,
 				F5BBD2262B86CEAB00593866 /* fonts */,
 				2AD260822B7CCA24000265A4 /* running-io-Info.plist */,
 				2AD260742B7C433E000265A4 /* running_ioApp.swift */,
-				2AD260832B7CCD1A000265A4 /* LocationManager.swift */,
-				2AD260762B7C433E000265A4 /* ContentView.swift */,
-				2AD260852B7DBF88000265A4 /* MapView.swift */,
-				F5BBD2222B85138200593866 /* UserSession.swift */,
-				F5BBD2242B851F6400593866 /* TitleView.swift */,
-				F5BBD22C2B86FE7500593866 /* ProfileView.swift */,
-				F5BBD2312B88421300593866 /* ImageLoader.swift */,
-				F5BBD22A2B86E08900593866 /* OnBoardingView.swift */,
-				2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */,
-				2A2DB6E42B8834C10058044A /* UserLocation.swift */,
-				F5BBD2332B88460400593866 /* RemoteImageView.swift */,
-				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
-				2AD260782B7C433F000265A4 /* Assets.xcassets */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
 			);
 			path = running.io;
@@ -127,6 +118,47 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F5C72EEA2BC928AF00BE0843 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2AD260762B7C433E000265A4 /* ContentView.swift */,
+				F5BBD2242B851F6400593866 /* TitleView.swift */,
+				F5BBD22C2B86FE7500593866 /* ProfileView.swift */,
+				F5BBD22A2B86E08900593866 /* OnBoardingView.swift */,
+				F5BBD2332B88460400593866 /* RemoteImageView.swift */,
+				2AD260852B7DBF88000265A4 /* MapView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F5C72EEB2BC928DD00BE0843 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				F5BBD2312B88421300593866 /* ImageLoader.swift */,
+				2AD260832B7CCD1A000265A4 /* LocationManager.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		F5C72EEC2BC9291100BE0843 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2AD260782B7C433F000265A4 /* Assets.xcassets */,
+				F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		F5C72EED2BC9292200BE0843 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F5BBD2222B85138200593866 /* UserSession.swift */,
+				2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */,
+				2A2DB6E42B8834C10058044A /* UserLocation.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
