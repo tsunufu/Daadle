@@ -1,4 +1,4 @@
-# HackU2024 制作作品
+# 運動系ゲームアプリ 「Daadle」
 
 <img width="350" alt="スクリーンショット 2024-02-23 22 31 41" src="https://github.com/tsunufu/Daadle/assets/73733296/2a01e062-bd14-466d-aa4a-64ca5aac41dc">
 
