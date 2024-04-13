@@ -20,7 +20,6 @@ struct MapView: UIViewRepresentable {
        func updateUIView(_ uiView: MKMapView, context: Context) {
            print("updateUIView is called")
            updatePolyline(for: uiView)
-           updatePolygon(for: uiView)
            
            updateUserLocationsOnMap(uiView)
            updateUserPolygonsOnMap(uiView)
@@ -153,6 +152,9 @@ extension MapView {
         let coordinates = locationManager.locations
         let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
         
+        let renderer = MKPolylineRenderer(polyline: polyline)
+        renderer.alpha = 0.3
+        
         
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         mapView.addOverlay(polyline)
@@ -177,18 +179,6 @@ extension MapView {
             }
         }
     }
-    
-    func updatePolygon(for mapView: MKMapView) {
-        mapView.overlays.forEach { if $0 is MKPolygon { mapView.removeOverlay($0) } }
-
-        for (userId, coordinates) in locationManager.userLocationsHistory {
-            guard coordinates.count > 2 else { continue } // ポリゴンを形成するためには少なくとも3点が必要
-            
-            let polygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
-            polygon.title = userId // 実際のユーザーIDをタイトルに設定
-            mapView.addOverlay(polygon)
-        }
-    }
 
     
     func updateUserLocationsOnMap(_ uiView: MKMapView) {
@@ -207,6 +197,9 @@ extension MapView {
             let polylineId = userId
             let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
             polyline.title = polylineId
+            
+            let renderer = MKPolylineRenderer(polyline: polyline)
+            renderer.alpha = 0.3
 
             if existingPolylinesIds.contains(polylineId) {
                 if let index = uiView.overlays.firstIndex(where: { ($0 as? MKPolyline)?.title == polylineId }) {
