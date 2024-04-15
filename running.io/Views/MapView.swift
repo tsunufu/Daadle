@@ -20,7 +20,6 @@ struct MapView: UIViewRepresentable {
        func updateUIView(_ uiView: MKMapView, context: Context) {
            print("updateUIView is called")
            updatePolyline(for: uiView)
-           
            updateUserLocationsOnMap(uiView)
            updateUserPolygonsOnMap(uiView)
            updateUserAnnotationsOnMap(uiView)
@@ -52,32 +51,41 @@ struct MapView: UIViewRepresentable {
            }
            
            func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-               guard let polygon = overlay as? MKPolygon else {
-                   return MKOverlayRenderer(overlay: overlay)
-               }
-
-               let renderer = MKPolygonRenderer(polygon: polygon)
-
-               // 現在のユーザーIDを取得
-               guard let currentUserId = Auth.auth().currentUser?.uid else {
-                   // 現在のユーザーIDがnilの場合、デフォルトの色を設定して処理を続行
-                   renderer.fillColor = UIColor.gray.withAlphaComponent(0.5)
-                   renderer.strokeColor = .gray
+               if let polyline = overlay as? MKPolyline {
+                   let renderer = MKPolylineRenderer(polyline: polyline)
+                   renderer.alpha = 0.5
+                   guard let currentUserId = Auth.auth().currentUser?.uid else {
+                       renderer.strokeColor = UIColor.gray.withAlphaComponent(0.5)
+                       renderer.lineWidth = 4.0
+                       return renderer
+                   }
+                   if polyline.title == currentUserId {
+                       renderer.strokeColor = UIColor.red.withAlphaComponent(0.5)
+                   } else {
+                       renderer.strokeColor = UIColor.purple.withAlphaComponent(0.5)
+                   }
                    renderer.lineWidth = 4.0
                    return renderer
+               } else if let polygon = overlay as? MKPolygon {
+                   let renderer = MKPolygonRenderer(polygon: polygon)
+                   renderer.alpha = 0.5
+                   guard let currentUserId = Auth.auth().currentUser?.uid else {
+                       renderer.fillColor = UIColor.gray.withAlphaComponent(0.5)
+                       renderer.strokeColor = UIColor.gray.withAlphaComponent(0.5)
+                       renderer.lineWidth = 1.0
+                       return renderer
+                   }
+                   if polygon.title == currentUserId {
+                       renderer.fillColor = UIColor.red.withAlphaComponent(0.5)
+                       renderer.strokeColor = UIColor.red.withAlphaComponent(0.5)
+                   } else {
+                       renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
+                       renderer.strokeColor = UIColor.purple.withAlphaComponent(0.5)
+                   }
+                   renderer.lineWidth = 1.0
+                   return renderer
                }
-
-               // ポリゴンのタイトルが現在のユーザーIDと一致するかどうかで色を変更
-               if polygon.title == currentUserId {
-                   renderer.fillColor = UIColor.red.withAlphaComponent(0.5)
-                   renderer.strokeColor = .red
-               } else {
-                   renderer.fillColor = UIColor.purple.withAlphaComponent(0.5)
-                   renderer.strokeColor = .purple
-               }
-
-               renderer.lineWidth = 4.0
-               return renderer
+               return MKOverlayRenderer()
            }
            
            func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -142,24 +150,28 @@ struct MapView: UIViewRepresentable {
 
                return annotationView
            }
+           
+           
        }
     }
 
 extension MapView {
     func updatePolyline(for mapView: MKMapView) {
-        mapView.overlays.forEach { if $0 is MKPolyline { mapView.removeOverlay($0) } }
+        let currentUserId = Auth.auth().currentUser?.uid
+        let polylinesToRemove = mapView.overlays.compactMap { $0 as? MKPolyline }.filter { $0.title == currentUserId }
+        mapView.removeOverlays(polylinesToRemove)
 
+        // 新しい座標でポリラインを作成
         let coordinates = locationManager.locations
-        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-        
-        let renderer = MKPolylineRenderer(polyline: polyline)
-        renderer.alpha = 0.3
-        
-        
+        if coordinates.count > 1 {
+            let newPolyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+            newPolyline.title = currentUserId
+            mapView.addOverlay(newPolyline)
+        }
+
+        // ログ出力
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
-        mapView.addOverlay(polyline)
-        
-        if let lastLocation = locationManager.locations.last {
+        if let lastLocation = coordinates.last {
             // Firebase Databaseを更新
             uploadLocation(latitude: lastLocation.latitude, longitude: lastLocation.longitude)
         }
@@ -182,47 +194,40 @@ extension MapView {
 
     
     func updateUserLocationsOnMap(_ uiView: MKMapView) {
-        var existingPolylinesIds: [String] = uiView.overlays.compactMap { overlay in
-            if let polyline = overlay as? MKPolyline, let polylineId = polyline.title {
-                return polylineId
-            }
-            return nil
-        }
-
+        let existingPolylines = uiView.overlays.compactMap { $0 as? MKPolyline }
+        let existingPolylineIds = Set(existingPolylines.map { $0.title ?? "" })
+        
+        var newPolylinesToAdd: [MKPolyline] = []
+        
         for (userId, coordinates) in locationManager.userLocationsHistory {
-            print("User ID: \(userId) has \(coordinates.count) coordinates.")
-
             guard coordinates.count > 1 else { continue }
-
-            let polylineId = userId
-            let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-            polyline.title = polylineId
             
-            let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.alpha = 0.3
-
-            if existingPolylinesIds.contains(polylineId) {
-                if let index = uiView.overlays.firstIndex(where: { ($0 as? MKPolyline)?.title == polylineId }) {
-                    uiView.removeOverlay(uiView.overlays[index])
-                    uiView.addOverlay(polyline)
+            let newPolyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+            newPolyline.title = userId
+            
+            // 新しいポリラインを追加
+            uiView.addOverlay(newPolyline)
+            newPolylinesToAdd.append(newPolyline)
+            
+            // 既存のポリラインを更新するか新しいポリラインを追加するか判断
+            if existingPolylineIds.contains(userId) {
+                // 既存のポリラインを見つけて削除
+                if let existingPolyline = existingPolylines.first(where: { $0.title == userId }) {
+                    uiView.removeOverlay(existingPolyline)
                 }
-            } else {
-                uiView.addOverlay(polyline)
-            }
-
-            existingPolylinesIds.removeAll { $0 == polylineId }
-        }
-
-        for polylineId in existingPolylinesIds {
-            if let index = uiView.overlays.firstIndex(where: { ($0 as? MKPolyline)?.title == polylineId }) {
-                uiView.removeOverlay(uiView.overlays[index])
             }
         }
+        
+        // 不要になった既存のポリラインを削除
+        let polylinesToRemove = existingPolylines.filter { !newPolylinesToAdd.contains($0) }
+        uiView.removeOverlays(polylinesToRemove)
     }
     
     func updateUserPolygonsOnMap(_ uiView: MKMapView) {
         let existingPolygons = uiView.overlays.compactMap { $0 as? MKPolygon }
         let existingPolygonIds = Set(existingPolygons.map { $0.title ?? "" })
+
+        var newPolygonsToAdd: [MKPolygon] = []
 
         for (userId, coordinates) in locationManager.userLocationsHistory {
             guard coordinates.count > 2 else { continue }
@@ -232,50 +237,57 @@ extension MapView {
 
             // 既存のポリゴンを削除する前に新しいポリゴンを追加
             uiView.addOverlay(newPolygon)
+            newPolygonsToAdd.append(newPolygon)
 
             // 既存のポリゴンを更新するか新しいポリゴンを追加するか判断
             if existingPolygonIds.contains(userId) {
                 // 既存のポリゴンを見つけて削除
                 if let existingPolygon = existingPolygons.first(where: { $0.title == userId }) {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        uiView.removeOverlay(existingPolygon)
-                    }
+                    uiView.removeOverlay(existingPolygon)
                 }
             }
         }
+
+        // 不要になった既存のポリゴンを削除
+        let polygonsToRemove = existingPolygons.filter { !newPolygonsToAdd.contains($0) }
+        uiView.removeOverlays(polygonsToRemove)
     }
     
     
     func updateUserAnnotationsOnMap(_ uiView: MKMapView) {
-        let groupedAnnotations = Dictionary(grouping: uiView.annotations.compactMap { $0 as? UserLocationAnnotation }) { $0.userId }
-        let uniqueAnnotations = groupedAnnotations.mapValues { annotations -> UserLocationAnnotation in
-            return annotations.first!
-        }
-
+        var updatedAnnotations = Set<String>()
+        
         for (userId, locationData) in locationManager.allUserLocations {
             if let locationInfo = locationData as? [String: Any],
                let latitude = locationInfo["latitude"] as? CLLocationDegrees,
                let longitude = locationInfo["longitude"] as? CLLocationDegrees {
                 let newCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
 
-                // Firebaseからユーザー名を取得
-                let userRef = Database.database().reference(withPath: "users/\(userId)/username")
-                userRef.observeSingleEvent(of: .value) { snapshot in
-                    let username = snapshot.value as? String ?? "Unknown User"
+                let existingAnnotation = uiView.annotations.first {
+                    ($0 as? UserLocationAnnotation)?.userId == userId
+                } as? UserLocationAnnotation
 
-                    DispatchQueue.main.async {
-                        if let existingAnnotation = uniqueAnnotations[userId] {
-                            existingAnnotation.coordinate = newCoordinate
-                            existingAnnotation.title = username
-                        } else {
-                            let annotation = UserLocationAnnotation(userId: userId, coordinate: newCoordinate, title: username)
-                            annotation.title = username
-                            uiView.addAnnotation(annotation)
-                        }
-                    }
+                let username = locationInfo["username"] as? String ?? "Unknown User"  // ユーザー名を取得、もしくはデフォルト値の設定
+
+                if let annotation = existingAnnotation {
+                    annotation.coordinate = newCoordinate
+                    annotation.title = username  // 更新されたユーザー名を設定
+                    uiView.addAnnotation(annotation)
+                } else {
+                    let annotation = UserLocationAnnotation(userId: userId, coordinate: newCoordinate, title: username)
+                    uiView.addAnnotation(annotation)
                 }
+                updatedAnnotations.insert(userId)
             }
         }
+
+        // Remove annotations that are no longer present in the data source
+        let annotationsToRemove = uiView.annotations.filter {
+            guard let annotation = $0 as? UserLocationAnnotation else { return false }
+            return !updatedAnnotations.contains(annotation.userId)
+        }
+        
+        uiView.removeAnnotations(annotationsToRemove)
     }
 
 
