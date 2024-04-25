@@ -8,8 +8,16 @@
 import Foundation
 
 class UserSession: ObservableObject {
-    @Published var isSignedIn: Bool = false
+    static let shared = UserSession()
+    
+    @Published var isSignedIn: Bool = false {
+        didSet {
+            print("isSignedIn updated to: \(isSignedIn)")
+        }
+    }
     @Published var userUID: String? = nil
     @Published var isNavigatingToLogin: Bool = false
     @Published var isOnBoardingCompleted: Bool = false
+    
+    private init() {}
 }
