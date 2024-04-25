@@ -12,9 +12,22 @@ import GoogleSignIn
 
 // 追加
 class AppDelegate: NSObject, UIApplicationDelegate {
+    var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
+    
     func application(_ application: UIApplication,
                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { (auth, user) in
+            let userSession = UserSession.shared
+            if let user = user {
+                userSession.userUID = user.uid
+                userSession.isSignedIn = true
+            } else {
+                userSession.isSignedIn = false
+            }
+        }
+        
         return true
     }
     
@@ -28,7 +41,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct running_ioApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var userSession = UserSession()
+    @StateObject private var userSession = UserSession.shared
 
     var body: some Scene {
         WindowGroup {
