@@ -277,42 +277,13 @@ struct ProfileView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .center) {
-                    // プロフィール画面
+                    // プロフィール画像
                     ProfileImageView(selectedImage: $selectedImage, imageUrl: $imageUrl, isImagePickerPresented: $isImagePickerPresented)
                     
                     HStack {
-                        if isEditing {
-                            TextField("ユーザー名を入力", text: $draftUsername)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                .padding(10)
-                                .background(Color.white)
-                                .cornerRadius(10)
-                                .padding(.trailing, 10)
-                        } else {
-                            Text(userName)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                                .fontWeight(.bold)
-                                .foregroundColor(userNameLoadFailed ? .red : .black)
-                        }
-                        
-                        if showUsernameEditUI {
-                            Button(action: {
-                                if self.isEditing {
-                                    self.updateUsername()
-                                } else {
-                                    self.draftUsername = self.userName // 編集を開始する前に現在のユーザー名を保存
-                                    self.isEditing = true
-                                }
-                            }) {
-                                if isEditing {
-                                    Image(systemName: "checkmark.square.fill")
-                                        .foregroundColor(.green)
-                                } else {
-                                    Image("edit") // 'edit' という名前のカスタム画像を使用
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
+                        // ユーザー名の変更UI
+                        UsernameEditView(userName: $userName, draftUsername: $draftUsername, isEditing: $isEditing, userNameLoadFailed: $userNameLoadFailed, showUsernameEditUI: showUsernameEditUI, updateUsername: updateUsername)
+
                     }
                     .padding(.horizontal, 32) // HStack全体に水平方向の余白を適用
                     .padding(.top, 16)
@@ -574,6 +545,51 @@ struct ProfileImageView: View {
     }
 }
 
+struct UsernameEditView: View {
+    @Binding var userName: String
+    @Binding var draftUsername: String
+    @Binding var isEditing: Bool
+    @Binding var userNameLoadFailed: Bool
+    let showUsernameEditUI: Bool
+    let updateUsername: () -> Void
+
+    var body: some View {
+        HStack {
+            if isEditing {
+                TextField("ユーザー名を入力", text: $draftUsername)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(10)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .padding(.trailing, 10)
+            } else {
+                Text(userName)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                    .fontWeight(.bold)
+                    .foregroundColor(userNameLoadFailed ? .red : .black)
+            }
+
+            if showUsernameEditUI {
+                Button(action: {
+                    if self.isEditing {
+                        self.updateUsername()
+                    } else {
+                        self.draftUsername = self.userName // 編集を開始する前に現在のユーザー名を保存
+                        self.isEditing = true
+                    }
+                }) {
+                    if isEditing {
+                        Image(systemName: "checkmark.square.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Image("edit") // 'edit' という名前のカスタム画像を使用
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+        }
+    }
+}
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
