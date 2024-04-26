@@ -277,43 +277,8 @@ struct ProfileView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .center) {
-                    // プロフィール画像
-                    if let selectedImage = selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 10)
-                            .padding(.top, 44)
-                            .onTapGesture {
-                                self.isImagePickerPresented = true
-                            }
-                    } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
-                        RemoteImageView(url: url)
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 10)
-                            .padding(.top, 44)
-                            .onTapGesture {
-                                self.isImagePickerPresented = true
-                            }
-                    } else {
-                        Image(systemName: "person.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 10)
-                            .padding(.top, 44)
-                            .onTapGesture {
-                                self.isImagePickerPresented = true
-                            }
-                    }
+                    // プロフィール画面
+                    ProfileImageView(selectedImage: $selectedImage, imageUrl: $imageUrl, isImagePickerPresented: $isImagePickerPresented)
                     
                     HStack {
                         if isEditing {
@@ -563,6 +528,52 @@ struct ProfileView: View {
         }
     }
 }
+
+struct ProfileImageView: View {
+    @Binding var selectedImage: UIImage?
+    @Binding var imageUrl: String?
+    @Binding var isImagePickerPresented: Bool
+
+    var body: some View {
+        if let selectedImage = selectedImage {
+            Image(uiImage: selectedImage)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                .shadow(radius: 10)
+                .padding(.top, 44)
+                .onTapGesture {
+                    self.isImagePickerPresented = true
+                }
+        } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
+            RemoteImageView(url: url)
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                .shadow(radius: 10)
+                .padding(.top, 44)
+                .onTapGesture {
+                    self.isImagePickerPresented = true
+                }
+        } else {
+            Image(systemName: "person.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                .shadow(radius: 10)
+                .padding(.top, 44)
+                .onTapGesture {
+                    self.isImagePickerPresented = true
+                }
+        }
+    }
+}
+
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
