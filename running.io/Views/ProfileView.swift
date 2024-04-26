@@ -292,33 +292,8 @@ struct ProfileView: View {
                     BadgeView(userBadges: userBadges)
                     .padding(.horizontal)
                     
-                    // スコアセクション
-                    HStack(spacing: 20) {
-                        VStack {
-                            Text(String(format: "%.0f", totalScore))
-                                .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                                .fontWeight(.bold)
-                            Text("total score💪")
-                                .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                                .foregroundColor(.gray)
-                        }
-                        //                    VStack {
-                        //                        Text("\(streaks)")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                        //                            .fontWeight(.bold)
-                        //                        Text("streaks🔥")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                        //                            .foregroundColor(.gray)
-                        //                    }
-                        //                    VStack {
-                        //                        Text("\(wins)")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                        //                            .fontWeight(.bold)
-                        //                        Text("wins🏆")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                        //                            .foregroundColor(.gray)
-                        //                    }
-                    }
+                    // スコア表示ビュー
+                    ScoreView(totalScore: totalScore, streaks: streaks, wins: wins)
                     .padding(.top, 12)
                     
                     // フレンドリスト
@@ -594,6 +569,41 @@ struct BadgeView: View {
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 10)
+            }
+        }
+    }
+}
+
+struct ScoreView: View {
+    let totalScore: Double
+    let streaks: Int
+    let wins: Int
+
+    var body: some View {
+        HStack(spacing: 20) {
+            VStack {
+                Text(String(format: "%.0f", totalScore))
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                Text("total score💪")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .foregroundColor(.gray)
+            }
+            VStack {
+                Text("\(streaks)")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                Text("streaks🔥")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .foregroundColor(.gray)
+            }
+            VStack {
+                Text("\(wins)")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                Text("wins🏆")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .foregroundColor(.gray)
             }
         }
     }
