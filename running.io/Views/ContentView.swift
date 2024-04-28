@@ -11,7 +11,9 @@ import FirebaseDatabase
 
 struct BottomCardView: View {
     var areaScore: Double?
-    
+    var userUID: String
+    @State private var friendRankings: [(username: String, score: Double, uid: String)] = []
+
     var body: some View {
         VStack {
             Capsule()
@@ -28,7 +30,7 @@ struct BottomCardView: View {
                         .font(Font.custom("DelaGothicOne-Regular", size: 12))
                         .foregroundColor(.gray)
                     Text("Score: \(areaScore != nil ? "\(Int(areaScore!))" : "null")")
-                        .font(Font.custom("DelaGothicOne-Regular", size:12))
+                        .font(Font.custom("DelaGothicOne-Regular", size: 12))
                     Text("次のバッジ獲得まであと4702")
                         .font(Font.custom("DelaGothicOne-Regular", size: 8))
                         .foregroundColor(.gray)
@@ -41,30 +43,65 @@ struct BottomCardView: View {
                 VStack(alignment: .leading) {
                     Text("ランキング")
                         .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                    HStack {
-                        Image(systemName: "rosette")
-                        Text("1  あおいち  28384")
-                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                    }
-                    HStack {
-                        Image(systemName: "rosette")
-                            .padding(.bottom, 42)
-                        Text("2  えふじ  22394")
-                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                            .padding(.bottom, 42)
+                        .padding(.bottom, 4)
+
+                    ForEach(friendRankings.indices, id: \.self) { index in
+                        HStack {
+                            Image(systemName: "rosette")
+                            Text("\(index + 1)  \(friendRankings[index].username)  \(Int(friendRankings[index].score))")
+                                .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                        }
+                        .padding(.bottom, index < friendRankings.count - 1 ? 4 : 0)
                     }
                 }
-                .padding([.trailing, .top, .bottom])
+                .offset(y: -10)
             }
-            
             .padding(.horizontal, 32)
         }
         .background(Color(red: 253 / 255, green: 254 / 255, blue: 249 / 255))
         .cornerRadius(30)
         .shadow(radius: 12)
         .padding([.horizontal, .bottom], 0)
+        .onAppear {
+            fetchFriendsAndTheirScores()
+        }
     }
+
+    private func fetchFriendsAndTheirScores() {
+            let friendsRef = Database.database().reference(withPath: "users/\(userUID)/friends")
+            friendsRef.observeSingleEvent(of: .value) { snapshot in
+                var friendsUIDs = [String]()
+                for child in snapshot.children {
+                    if let childSnapshot = child as? DataSnapshot {
+                        friendsUIDs.append(childSnapshot.key)
+                    }
+                }
+                friendsUIDs.append(self.userUID)
+                observeScoresForFriends(friendsUIDs)
+            }
+        }
+
+        private func observeScoresForFriends(_ friendUIDs: [String]) {
+            let usersRef = Database.database().reference(withPath: "users")
+            for uid in friendUIDs {
+                usersRef.child(uid).child("score").observe(.value) { snapshot in
+                    guard let score = snapshot.value as? Double else { return }
+                    usersRef.child(uid).child("username").observeSingleEvent(of: .value) { usernameSnapshot in
+                        guard let username = usernameSnapshot.value as? String else { return }
+
+                        if let index = self.friendRankings.firstIndex(where: { $0.uid == uid }) {
+                            self.friendRankings[index].score = score
+                        } else {
+                            self.friendRankings.append((username, score, uid))
+                        }
+
+                        self.friendRankings.sort { $0.score > $1.score }
+                    }
+                }
+            }
+        }
 }
+
 
 struct FullScreenMapView: View {
     @ObservedObject private var locationManager = LocationManager()
@@ -117,7 +154,7 @@ struct FullScreenMapView: View {
                 Spacer()
             }
 
-            BottomCardView(areaScore: areaScore)
+            BottomCardView(areaScore: areaScore, userUID: userUID)
                 .offset(y: 50)
                 .edgesIgnoringSafeArea(.bottom)
         }
