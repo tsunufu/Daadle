@@ -9,10 +9,12 @@ import SwiftUI
 import MapKit
 import FirebaseDatabase
 
+
 struct BottomCardView: View {
     var areaScore: Double?
     var userUID: String
     @State private var friendRankings: [(username: String, score: Double, uid: String)] = []
+    @State private var offset = CGSize.zero  // ビューのオフセット管理
 
     var body: some View {
         VStack {
@@ -20,6 +22,15 @@ struct BottomCardView: View {
                 .frame(width: 60, height: 8)
                 .foregroundColor(.secondary)
                 .padding(.vertical, 10)
+                .gesture(DragGesture().onChanged { value in
+                    self.offset = value.translation
+                }.onEnded { value in
+                    if value.translation.height > 50 { // 下にドラッグした距離が100を超えた場合、ビューを閉じる
+                        self.offset = CGSize(width: 0, height: 120) // モーダルを下に隠す
+                    } else {
+                        self.offset = .zero // 元の位置に戻す
+                    }
+                })
             
             HStack {
                 VStack(alignment: .leading) {
@@ -62,6 +73,8 @@ struct BottomCardView: View {
         .cornerRadius(30)
         .shadow(radius: 12)
         .padding([.horizontal, .bottom], 0)
+        .offset(y: self.offset.height)
+        .animation(.spring())
         .onAppear {
             fetchFriendsAndTheirScores()
         }
