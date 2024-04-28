@@ -194,35 +194,26 @@ extension MapView {
 
     
     func updateUserLocationsOnMap(_ uiView: MKMapView) {
-        let existingPolylines = uiView.overlays.compactMap { $0 as? MKPolyline }
-        let existingPolylineIds = Set(existingPolylines.map { $0.title ?? "" })
-        
-        var newPolylinesToAdd: [MKPolyline] = []
-        
-        for (userId, coordinates) in locationManager.userLocationsHistory {
-            guard coordinates.count > 1 else { continue }
-            
-            let newPolyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-            newPolyline.title = userId
-            
-            // 新しいポリラインを追加
-            uiView.addOverlay(newPolyline)
-            newPolylinesToAdd.append(newPolyline)
-            
-            // 既存のポリラインを更新するか新しいポリラインを追加するか判断
-            if existingPolylineIds.contains(userId) {
-                // 既存のポリラインを見つけて削除
-                if let existingPolyline = existingPolylines.first(where: { $0.title == userId }) {
-                    uiView.removeOverlay(existingPolyline)
-                }
-            }
+        let currentPolylines = Set(uiView.overlays.compactMap { $0 as? MKPolyline })
+        let newPolylines = Set(locationManager.userLocationsHistory.compactMap { userId, coordinates -> MKPolyline? in
+            guard coordinates.count > 1 else { return nil }
+            let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+            polyline.title = userId
+            return polyline
+        })
+
+        // 既存のポリラインと新しいポリラインの差分を取得
+        let polylinesToAdd = Array(newPolylines.subtracting(currentPolylines))
+        let polylinesToRemove = Array(currentPolylines.subtracting(newPolylines))
+
+        // 地図上の更新を一括で行う
+        DispatchQueue.main.async {
+            uiView.addOverlays(polylinesToAdd)
+            uiView.removeOverlays(polylinesToRemove)
         }
-        
-        // 不要になった既存のポリラインを削除
-        let polylinesToRemove = existingPolylines.filter { !newPolylinesToAdd.contains($0) }
-        uiView.removeOverlays(polylinesToRemove)
     }
-    
+
+
     func updateUserPolygonsOnMap(_ uiView: MKMapView) {
         let existingPolygons = uiView.overlays.compactMap { $0 as? MKPolygon }
         let existingPolygonIds = Set(existingPolygons.map { $0.title ?? "" })
