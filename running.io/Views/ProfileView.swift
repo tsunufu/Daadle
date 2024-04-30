@@ -25,7 +25,7 @@ struct ProfileView: View {
     @State private var imageUrl: String? = nil
     @State private var isLoadingUserName = true
     @State private var userNameLoadFailed = false
-    @Binding var totalScore: Double
+    @State var totalScore: Double
     @State private var friends = [Friend]()
     @State private var searchText = ""
     @State private var searchResults = [Friend]()
@@ -37,9 +37,9 @@ struct ProfileView: View {
     @State private var showUsernameEditUI: Bool
     @State private var showFriendSearchUI: Bool
     
-    init(userID: String, totalScore: Binding<Double>, showUsernameEditUI: Bool = true, showFriendSearchUI: Bool = true) {
+    init(userID: String, totalScore: Double, showUsernameEditUI: Bool = true, showFriendSearchUI: Bool = true) {
         self.userID = userID
-        _totalScore = totalScore
+        self.totalScore = totalScore
         self.showUsernameEditUI = showUsernameEditUI
         self.showFriendSearchUI = showFriendSearchUI
     }
