@@ -96,25 +96,25 @@ struct BottomCardView: View {
             }
         }
 
-        private func observeScoresForFriends(_ friendUIDs: [String]) {
-            let usersRef = Database.database().reference(withPath: "users")
-            for uid in friendUIDs {
-                usersRef.child(uid).child("score").observe(.value) { snapshot in
-                    guard let score = snapshot.value as? Double else { return }
-                    usersRef.child(uid).child("username").observeSingleEvent(of: .value) { usernameSnapshot in
-                        guard let username = usernameSnapshot.value as? String else { return }
+    private func observeScoresForFriends(_ friendUIDs: [String]) {
+        let usersRef = Database.database().reference(withPath: "users")
+        for uid in friendUIDs {
+            usersRef.child(uid).child("score").observe(.value) { snapshot in
+                guard let score = snapshot.value as? Double else { return }
+                usersRef.child(uid).child("username").observeSingleEvent(of: .value) { usernameSnapshot in
+                    guard let username = usernameSnapshot.value as? String else { return }
 
-                        if let index = self.friendRankings.firstIndex(where: { $0.uid == uid }) {
-                            self.friendRankings[index].score = score
-                        } else {
-                            self.friendRankings.append((username, score, uid))
-                        }
-
-                        self.friendRankings.sort { $0.score > $1.score }
+                    if let index = self.friendRankings.firstIndex(where: { $0.uid == uid }) {
+                        self.friendRankings[index].score = score
+                    } else {
+                        self.friendRankings.append((username, score, uid))
                     }
+
+                    self.friendRankings.sort { $0.score > $1.score }
                 }
             }
         }
+    }
 }
 
 
@@ -125,6 +125,7 @@ struct FullScreenMapView: View {
     @State private var areaScore: Double?
     @State private var locationsCount: Int = 0
     @State private var profileImageUrl: String?
+    @State private var isImageTapped = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -147,8 +148,14 @@ struct FullScreenMapView: View {
                             .overlay(Circle().stroke(Color.white, lineWidth: 4))
                             .shadow(radius: 3)
                             .padding()
+                            .scaleEffect(isImageTapped ? 1.5 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isImageTapped)
                             .onTapGesture {
-                                self.showProfileView = true
+                                self.isImageTapped = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    self.showProfileView = true
+                                    self.isImageTapped = false
+                                }
                             }
                     } else {
                         Image(systemName: "person.circle.fill")
@@ -160,14 +167,21 @@ struct FullScreenMapView: View {
                             .overlay(Circle().stroke(Color.white, lineWidth: 4))
                             .shadow(radius: 3)
                             .padding()
+                            .scaleEffect(isImageTapped ? 1.5 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isImageTapped)
                             .onTapGesture {
-                                self.showProfileView = true
+                                self.isImageTapped = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    self.showProfileView = true
+                                    self.isImageTapped = false
+                                }
                             }
                     }
                     Spacer()
                 }
                 Spacer()
             }
+
 
             BottomCardView(areaScore: areaScore, userUID: userUID)
                 .offset(y: 50)
