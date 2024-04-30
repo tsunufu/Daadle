@@ -172,7 +172,7 @@ struct FullScreenMapView: View {
                 .edgesIgnoringSafeArea(.bottom)
         }
         .sheet(isPresented: $showProfileView) {
-            ProfileView(userID: userUID, totalScore: Binding.constant(areaScore ?? 0.0))
+            ProfileView(userID: userUID, totalScore: areaScore ?? 0.0)
         }
         .onAppear {
             fetchUserProfileImage()

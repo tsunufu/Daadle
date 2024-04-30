@@ -11,6 +11,6 @@ struct FriendProfileView: View {
     let friend: ProfileView.Friend
     
     var body: some View {
-        ProfileView(userID: friend.id, totalScore: .constant(friend.friendScore), showUsernameEditUI: false, showFriendSearchUI: false)
+        ProfileView(userID: friend.id, totalScore: friend.friendScore, showUsernameEditUI: false, showFriendSearchUI: false)
     }
 }
