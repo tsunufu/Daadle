@@ -42,6 +42,7 @@ struct BottomCardView: View {
                         .foregroundColor(.gray)
                     Text("Score: \(areaScore != nil ? "\(Int(areaScore!))" : "null")")
                         .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                        .animation(nil)
                     Text("次のバッジ獲得まであと4702")
                         .font(Font.custom("DelaGothicOne-Regular", size: 8))
                         .foregroundColor(.gray)
@@ -61,6 +62,7 @@ struct BottomCardView: View {
                             Image(systemName: "rosette")
                             Text("\(index + 1)  \(friendRankings[index].username)  \(Int(friendRankings[index].score))")
                                 .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                                .animation(nil)
                         }
                         .padding(.bottom, index < friendRankings.count - 1 ? 4 : 0)
                     }
