@@ -278,268 +278,34 @@ struct ProfileView: View {
             ScrollView {
                 VStack(alignment: .center) {
                     // プロフィール画像
-                    if let selectedImage = selectedImage {
-                        Image(uiImage: selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 10)
-                            .padding(.top, 44)
-                            .onTapGesture {
-                                self.isImagePickerPresented = true
-                            }
-                    } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
-                        RemoteImageView(url: url)
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 10)
-                            .padding(.top, 44)
-                            .onTapGesture {
-                                self.isImagePickerPresented = true
-                            }
-                    } else {
-                        Image(systemName: "person.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 10)
-                            .padding(.top, 44)
-                            .onTapGesture {
-                                self.isImagePickerPresented = true
-                            }
-                    }
+                    ProfileImageView(selectedImage: $selectedImage, imageUrl: $imageUrl, isImagePickerPresented: $isImagePickerPresented)
                     
                     HStack {
-                        if isEditing {
-                            TextField("ユーザー名を入力", text: $draftUsername)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                .padding(10)
-                                .background(Color.white)
-                                .cornerRadius(10)
-                                .padding(.trailing, 10)
-                        } else {
-                            Text(userName)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                                .fontWeight(.bold)
-                                .foregroundColor(userNameLoadFailed ? .red : .black)
-                        }
-                        
-                        if showUsernameEditUI {
-                            Button(action: {
-                                if self.isEditing {
-                                    self.updateUsername()
-                                } else {
-                                    self.draftUsername = self.userName // 編集を開始する前に現在のユーザー名を保存
-                                    self.isEditing = true
-                                }
-                            }) {
-                                if isEditing {
-                                    Image(systemName: "checkmark.square.fill")
-                                        .foregroundColor(.green)
-                                } else {
-                                    Image("edit") // 'edit' という名前のカスタム画像を使用
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
+                        // ユーザー名の変更UI
+                        UsernameEditView(userName: $userName, draftUsername: $draftUsername, isEditing: $isEditing, userNameLoadFailed: $userNameLoadFailed, showUsernameEditUI: showUsernameEditUI, updateUsername: updateUsername)
+
                     }
                     .padding(.horizontal, 32) // HStack全体に水平方向の余白を適用
                     .padding(.top, 16)
                     
-                    // バッジを表示するセクション
-                    VStack(alignment: .leading) {
-                        Text("取得したバッジ")
-                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
-                            .padding(.leading, 10)
-                        
-                        // userBadges 配列が空でない場合のみ ScrollView を表示
-                        if !userBadges.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(alignment: .center, spacing: 10) {
-                                    ForEach(userBadges, id: \.self) { badgeName in
-                                        Image(badgeName)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 50, height: 50)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity)
-                            }
-                        } else {
-                            Text("バッジはまだありません")
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                .foregroundColor(.gray)
-                                .frame(maxWidth: .infinity)
-                                .multilineTextAlignment(.center)
-                                .padding(.vertical, 10)
-                        }
-                    }
+                    // バッジ表示ビュー
+                    BadgeView(userBadges: userBadges)
                     .padding(.horizontal)
                     
-                    // スコアセクション
-                    HStack(spacing: 20) {
-                        VStack {
-                            Text(String(format: "%.0f", totalScore))
-                                .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                                .fontWeight(.bold)
-                            Text("total score💪")
-                                .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                                .foregroundColor(.gray)
-                        }
-                        //                    VStack {
-                        //                        Text("\(streaks)")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                        //                            .fontWeight(.bold)
-                        //                        Text("streaks🔥")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                        //                            .foregroundColor(.gray)
-                        //                    }
-                        //                    VStack {
-                        //                        Text("\(wins)")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                        //                            .fontWeight(.bold)
-                        //                        Text("wins🏆")
-                        //                            .font(Font.custom("DelaGothicOne-Regular", size: 12))
-                        //                            .foregroundColor(.gray)
-                        //                    }
-                    }
+                    // スコア表示ビュー
+                    ScoreView(totalScore: totalScore, streaks: streaks, wins: wins)
                     .padding(.top, 12)
                     
                     // フレンドリスト
                     if showFriendSearchUI {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                TextField("フレンドを検索", text: $searchText)
-                                    .onChange(of: searchText) { newValue in
-                                        if newValue.isEmpty {
-                                            showingSearchResults = false
-                                        }
-                                    }
-                                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                    .padding(7)
-                                    .padding(.horizontal, 25)
-                                    .background(Color(.systemGray6))
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        HStack {
-                                            Image(systemName: "magnifyingglass")
-                                                .foregroundColor(.gray)
-                                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                                                .padding(.leading, 8)
-                                            
-                                            if !searchText.isEmpty {
-                                                Button(action: {
-                                                    self.searchText = ""
-                                                }) {
-                                                    Image(systemName: "multiply.circle.fill")
-                                                        .foregroundColor(.gray)
-                                                        .padding(.trailing, 8)
-                                                }
-                                            }
-                                        }
-                                    )
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 10)
-                                
-                                Button(action: {
-                                    fetchUsers(searchQuery: searchText)
-                                    showingSearchResults = true // 検索ボタンが押されたことを示す
-                                }) {
-                                    Image(systemName: "magnifyingglass")
-                                }
-                                .padding(.trailing, 10)
-                            }
-                            .padding(.vertical, 10)
-                            
-                            if showingSearchResults {
-                                if searchResults.isEmpty {
-                                    Text("該当するユーザーが見つかりませんでした")
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                        .foregroundColor(.gray)
-                                        .frame(maxWidth: .infinity)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.vertical, 10)
-                                } else {
-                                    ForEach(searchResults, id: \.id) { user in
-                                        HStack {
-                                            Text(user.username)
-                                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                                .foregroundColor(.black)
-                                                .padding(.vertical, 2)
-                                                .padding(.leading, 20) // 左側からの距離を調整
-                                            
-                                            Spacer() // テキストとボタンの間にスペースを作る
-                                            
-                                            Button("追加") {
-                                                addFriend(user.id)
-                                            }
-                                            .font(Font.custom("DelaGothicOne-Regular", size: 14))
-                                            .padding(.trailing, 20)
-                                        }
-                                        .padding(.leading, 20)
-                                        
-                                        Divider()
-                                    }
-                                }
-                            } else {
-                                if friends.isEmpty {
-                                    Text("フレンドがいません🥺")
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                        .foregroundColor(.gray)
-                                        .frame(maxWidth: .infinity)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.vertical, 10)
-                                    
-                                    Spacer()
-                                } else {
-                                    ForEach(0..<friends.count, id: \.self) { index in
-                                        NavigationLink(destination: FriendProfileView(friend: friends[index])) {
-                                            HStack {
-                                                if let imageUrl = friends[index].imageUrl, let url = URL(string: imageUrl) {
-                                                    RemoteImageView(url: url)
-                                                        .frame(width: 50, height: 50)
-                                                        .clipShape(Circle())
-                                                        .padding(.horizontal, 10)
-                                                } else {
-                                                    Image(systemName: "person.fill")
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 50, height: 50)
-                                                        .background(Color.gray.opacity(0.3))
-                                                        .clipShape(Circle())
-                                                }
-
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text(friends[index].username)
-                                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                                        .foregroundColor(.black)
-                                                    Text("スコア：\(friends[index].friendScore, specifier: "%.0f")")
-                                                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
-                                                        .foregroundColor(.gray)
-                                                }
-                                                Spacer()
-                                            }
-                                            .padding(.vertical, 5)
-                                            Divider()
-                                        }
-                                    }
-                                    //.padding(.vertical, 10)
-                                }
-                            }
-                        }
-                        
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .padding()
-                        .padding(.bottom, 50)
+                        FriendListView(
+                            searchText: $searchText,
+                            searchResults: $searchResults,
+                            showingSearchResults: $showingSearchResults,
+                            friends: $friends,
+                            fetchUsers: fetchUsers,
+                            addFriend: addFriend
+                        )
                     }
                 }
                 .onAppear(perform: {
@@ -561,6 +327,304 @@ struct ProfileView: View {
             }
             .background(Color.orange.opacity(0.2))
         }
+    }
+}
+
+struct ProfileImageView: View {
+    @Binding var selectedImage: UIImage?
+    @Binding var imageUrl: String?
+    @Binding var isImagePickerPresented: Bool
+
+    var body: some View {
+        if let selectedImage = selectedImage {
+            Image(uiImage: selectedImage)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                .shadow(radius: 10)
+                .padding(.top, 44)
+                .onTapGesture {
+                    self.isImagePickerPresented = true
+                }
+        } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
+            RemoteImageView(url: url)
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                .shadow(radius: 10)
+                .padding(.top, 44)
+                .onTapGesture {
+                    self.isImagePickerPresented = true
+                }
+        } else {
+            Image(systemName: "person.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                .shadow(radius: 10)
+                .padding(.top, 44)
+                .onTapGesture {
+                    self.isImagePickerPresented = true
+                }
+        }
+    }
+}
+
+struct UsernameEditView: View {
+    @Binding var userName: String
+    @Binding var draftUsername: String
+    @Binding var isEditing: Bool
+    @Binding var userNameLoadFailed: Bool
+    let showUsernameEditUI: Bool
+    let updateUsername: () -> Void
+
+    var body: some View {
+        HStack {
+            if isEditing {
+                TextField("ユーザー名を入力", text: $draftUsername)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(10)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .padding(.trailing, 10)
+            } else {
+                Text(userName)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                    .fontWeight(.bold)
+                    .foregroundColor(userNameLoadFailed ? .red : .black)
+            }
+
+            if showUsernameEditUI {
+                Button(action: {
+                    if self.isEditing {
+                        self.updateUsername()
+                    } else {
+                        self.draftUsername = self.userName // 編集を開始する前に現在のユーザー名を保存
+                        self.isEditing = true
+                    }
+                }) {
+                    if isEditing {
+                        Image(systemName: "checkmark.square.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Image("edit") // 'edit' という名前のカスタム画像を使用
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct BadgeView: View {
+    var userBadges: [String]
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("取得したバッジ")
+                .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+                .padding(.leading, 10)
+
+            // userBadges 配列が空でない場合のみ ScrollView を表示
+            if !userBadges.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .center, spacing: 10) {
+                        ForEach(userBadges, id: \.self) { badgeName in
+                            Image(badgeName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 50, height: 50)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            } else {
+                Text("バッジはまだありません")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+                    .padding(.vertical, 10)
+            }
+        }
+    }
+}
+
+struct ScoreView: View {
+    let totalScore: Double
+    let streaks: Int
+    let wins: Int
+
+    var body: some View {
+        HStack(spacing: 20) {
+            VStack {
+                Text(String(format: "%.0f", totalScore))
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                Text("total score💪")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .foregroundColor(.gray)
+            }
+            VStack {
+                Text("\(streaks)")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                Text("streaks🔥")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .foregroundColor(.gray)
+            }
+            VStack {
+                Text("\(wins)")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                Text("wins🏆")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+}
+
+struct FriendListView: View {
+    @Binding var searchText: String
+    @Binding var searchResults: [ProfileView.Friend]
+    @Binding var showingSearchResults: Bool
+    @Binding var friends: [ProfileView.Friend]
+    var fetchUsers: (String) -> Void
+    var addFriend: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                TextField("フレンドを検索", text: $searchText)
+                    .onChange(of: searchText) { newValue in
+                        if newValue.isEmpty {
+                            showingSearchResults = false
+                        }
+                    }
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(7)
+                    .padding(.horizontal, 25)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .overlay(
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 8)
+                            
+                            if !searchText.isEmpty {
+                                Button(action: {
+                                    self.searchText = ""
+                                }) {
+                                    Image(systemName: "multiply.circle.fill")
+                                        .foregroundColor(.gray)
+                                        .padding(.trailing, 8)
+                                }
+                            }
+                        }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+                
+                Button(action: {
+                    fetchUsers(searchText)
+                    showingSearchResults = true // 検索ボタンが押されたことを示す
+                }) {
+                    Image(systemName: "magnifyingglass")
+                }
+                .padding(.trailing, 10)
+            }
+            .padding(.vertical, 10)
+            
+            if showingSearchResults {
+                if searchResults.isEmpty {
+                    Text("該当するユーザーが見つかりませんでした")
+                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 10)
+                } else {
+                    ForEach(searchResults, id: \.id) { user in
+                        HStack {
+                            Text(user.username)
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                .foregroundColor(.black)
+                                .padding(.vertical, 2)
+                                .padding(.leading, 20) // 左側からの距離を調整
+                            
+                            Spacer() // テキストとボタンの間にスペースを作る
+                            
+                            Button("追加") {
+                                addFriend(user.id)
+                            }
+                            .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                            .padding(.trailing, 20)
+                        }
+                        .padding(.leading, 20)
+                        
+                        Divider()
+                    }
+                }
+            } else {
+                if friends.isEmpty {
+                    Text("フレンドがいません🥺")
+                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 10)
+                    
+                    Spacer()
+                } else {
+                    ForEach(0..<friends.count, id: \.self) { index in
+                        NavigationLink(destination: FriendProfileView(friend: friends[index])) {
+                            HStack {
+                                if let imageUrl = friends[index].imageUrl, let url = URL(string: imageUrl) {
+                                    RemoteImageView(url: url)
+                                        .frame(width: 50, height: 50)
+                                        .clipShape(Circle())
+                                        .padding(.horizontal, 10)
+                                } else {
+                                    Image(systemName: "person.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                        .background(Color.gray.opacity(0.3))
+                                        .clipShape(Circle())
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(friends[index].username)
+                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                        .foregroundColor(.black)
+                                    Text("スコア：\(friends[index].friendScore, specifier: "%.0f")")
+                                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                                        .foregroundColor(.gray)
+                                }
+                                Spacer()
+                            }
+                            .padding(.vertical, 5)
+                            Divider()
+                        }
+                    }
+                    //.padding(.vertical, 10)
+                }
+            }
+        }
+        .background(Color.white)
+        .cornerRadius(10)
+        .padding()
+        .padding(.bottom, 50)
     }
 }
 
