@@ -42,7 +42,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct running_ioApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var userSession = UserSession.shared
-
+    
     var body: some Scene {
         WindowGroup {
             if userSession.isSignedIn {

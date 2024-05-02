@@ -197,6 +197,7 @@ struct OnBoardingView: View {
                         // 新しいユーザーの場合、デフォルトバッジを追加
                         if snapshot.childSnapshot(forPath: "badges").childrenCount == 0 {
                             updates["badges/badgeStart"] = true
+                            self.userSession.showBadgeView = true
                         }
                         
                         if updates.count > 0 {
