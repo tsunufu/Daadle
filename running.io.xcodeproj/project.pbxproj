@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2A2DB6E32B882ED60058044A /* UserLocationAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */; };
 		2A2DB6E52B8834C10058044A /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2DB6E42B8834C10058044A /* UserLocation.swift */; };
+		2A9BBD2F2BDF86D500E78656 /* BadgeGetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A9BBD2E2BDF86D500E78656 /* BadgeGetView.swift */; };
 		2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD260742B7C433E000265A4 /* running_ioApp.swift */; };
 		2AD260772B7C433E000265A4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD260762B7C433E000265A4 /* ContentView.swift */; };
 		2AD260792B7C433F000265A4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2AD260782B7C433F000265A4 /* Assets.xcassets */; };
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocationAnnotation.swift; sourceTree = "<group>"; };
 		2A2DB6E42B8834C10058044A /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
+		2A9BBD2E2BDF86D500E78656 /* BadgeGetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeGetView.swift; sourceTree = "<group>"; };
 		2AD260712B7C433E000265A4 /* running.io.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = running.io.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AD260742B7C433E000265A4 /* running_ioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = running_ioApp.swift; sourceTree = "<group>"; };
 		2AD260762B7C433E000265A4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 				F5BBD2332B88460400593866 /* RemoteImageView.swift */,
 				2AD260852B7DBF88000265A4 /* MapView.swift */,
 				F5861F772BDB247300FD5EE4 /* FriendProfileView.swift */,
+				2A9BBD2E2BDF86D500E78656 /* BadgeGetView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -251,6 +254,7 @@
 				2AD260772B7C433E000265A4 /* ContentView.swift in Sources */,
 				F5BBD2232B85138200593866 /* UserSession.swift in Sources */,
 				F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */,
+				2A9BBD2F2BDF86D500E78656 /* BadgeGetView.swift in Sources */,
 				2AD260862B7DBF88000265A4 /* MapView.swift in Sources */,
 				F5BBD2322B88421300593866 /* ImageLoader.swift in Sources */,
 				F5861F782BDB247300FD5EE4 /* FriendProfileView.swift in Sources */,

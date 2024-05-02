@@ -18,6 +18,7 @@ class UserSession: ObservableObject {
     @Published var userUID: String? = nil
     @Published var isNavigatingToLogin: Bool = false
     @Published var isOnBoardingCompleted: Bool = false
+    @Published var showBadgeView = false
     
     private init() {}
 }
