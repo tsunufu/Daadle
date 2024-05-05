@@ -18,6 +18,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var locations = [CLLocationCoordinate2D]()
     @Published var allUserLocations: [String: [String: Any]] = [:]
     @Published var userLocationsHistory: [String: [CLLocationCoordinate2D]] = [:]
+    @Published var isAlwaysAuthorized: Bool = false
     var currentUserID: String? = Auth.auth().currentUser?.uid
         
     var ref: DatabaseReference = Database.database().reference()
@@ -94,29 +95,35 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     
     override init() {
         locationManager = CLLocationManager()
-        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
-        locationManager.distanceFilter = 3.0
-        
-        locationManager.requestAlwaysAuthorization()
-        
-        locationManager.allowsBackgroundLocationUpdates = true
-        locationManager.pausesLocationUpdatesAutomatically = false
-        
         super.init()
         locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        locationManager.distanceFilter = 3.0
+        locationManager.requestAlwaysAuthorization()
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.startUpdatingLocation()
         fetchOtherUsersLocation()
         fetchOtherUsersCurrentLocation()
     }
     
-    func locationManager(_ manager: CLLocationManager,
-                         didUpdateLocations locations: [CLLocation], didChangeAuthorization status: CLAuthorizationStatus){
-        
-        if status == .authorizedAlways {
+    private func checkInitialAuthorizationStatus() {
+        let status = CLLocationManager.authorizationStatus()
+        isAlwaysAuthorized = (status == .authorizedAlways)
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedAlways:
+            isAlwaysAuthorized = true
             locationManager.allowsBackgroundLocationUpdates = true
             locationManager.startUpdatingLocation()
+        default:
+            isAlwaysAuthorized = false
         }
-        
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
 
         let locationAdded = filterAndAddLocation(newLocation)
@@ -125,9 +132,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             self.location = newLocation
             self.locations.append(center)
             self.region = MKCoordinateRegion(center: center, latitudinalMeters: 1000.0, longitudinalMeters: 1000.0)
-            print("New location added: (\(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude))")
         }
-        
     }
     
     func filterAndAddLocation(_ location: CLLocation) -> Bool {

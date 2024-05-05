@@ -44,6 +44,3 @@ struct BadgeGetView: View {
     }
 }
 
-//#Preview {
-//    BadgeGetView()
-//}
