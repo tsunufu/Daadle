@@ -124,6 +124,7 @@ struct FullScreenMapView: View {
     var userUID: String
     @State private var showProfileView = false
     @State private var showBadgeView = false
+    @State private var showWarningView = false
     @State private var areaScore: Double?
     @State private var locationsCount: Int = 0
     @State private var profileImageUrl: String?
@@ -188,11 +189,19 @@ struct FullScreenMapView: View {
             BottomCardView(areaScore: areaScore, userUID: userUID)
                 .offset(y: 50)
                 .edgesIgnoringSafeArea(.bottom)
+            
             if userSession.showBadgeView {
                 BadgeGetView(showBadgeView: $userSession.showBadgeView)
                     .background(Color.black.opacity(0.5)) // 背景を暗くするオプション
                     .edgesIgnoringSafeArea(.all) // 画面全体に広げる
                     .zIndex(1)
+            }
+            if showWarningView {
+                WarningView {
+                    self.showWarningView = false  // WarningViewを閉じる
+                }
+                .edgesIgnoringSafeArea(.all)
+                .zIndex(1)
             }
         }
         .sheet(isPresented: $showProfileView) {
@@ -200,12 +209,15 @@ struct FullScreenMapView: View {
         }
         .onAppear {
             fetchUserProfileImage()
+            updateWarningViewState()
         }
-//        .onChange(of: areaScore) { newValue in
-//            if let score = newValue, score > 1000 {
-//                showBadgeView = true // areaScoreが1000を超えたらBadgeGetViewを表示
-//            }
-//        }
+        .onChange(of: locationManager.isAlwaysAuthorized) { isAuthorized in
+            showWarningView = !isAuthorized
+        }
+    }
+    
+    private func updateWarningViewState() {
+        showWarningView = !locationManager.isAlwaysAuthorized
     }
 
     func updatePolygonScore() {

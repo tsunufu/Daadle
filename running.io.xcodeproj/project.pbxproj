@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2A2DB6E32B882ED60058044A /* UserLocationAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */; };
 		2A2DB6E52B8834C10058044A /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2DB6E42B8834C10058044A /* UserLocation.swift */; };
+		2A4503392BE5EDEA00FD12CA /* WarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4503382BE5EDEA00FD12CA /* WarningView.swift */; };
 		2A9BBD2F2BDF86D500E78656 /* BadgeGetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A9BBD2E2BDF86D500E78656 /* BadgeGetView.swift */; };
 		2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD260742B7C433E000265A4 /* running_ioApp.swift */; };
 		2AD260772B7C433E000265A4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD260762B7C433E000265A4 /* ContentView.swift */; };
@@ -34,6 +35,7 @@
 /* Begin PBXFileReference section */
 		2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocationAnnotation.swift; sourceTree = "<group>"; };
 		2A2DB6E42B8834C10058044A /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
+		2A4503382BE5EDEA00FD12CA /* WarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarningView.swift; sourceTree = "<group>"; };
 		2A9BBD2E2BDF86D500E78656 /* BadgeGetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeGetView.swift; sourceTree = "<group>"; };
 		2AD260712B7C433E000265A4 /* running.io.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = running.io.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AD260742B7C433E000265A4 /* running_ioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = running_ioApp.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				2AD260852B7DBF88000265A4 /* MapView.swift */,
 				F5861F772BDB247300FD5EE4 /* FriendProfileView.swift */,
 				2A9BBD2E2BDF86D500E78656 /* BadgeGetView.swift */,
+				2A4503382BE5EDEA00FD12CA /* WarningView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -260,6 +263,7 @@
 				F5861F782BDB247300FD5EE4 /* FriendProfileView.swift in Sources */,
 				2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */,
 				2AD260842B7CCD1A000265A4 /* LocationManager.swift in Sources */,
+				2A4503392BE5EDEA00FD12CA /* WarningView.swift in Sources */,
 				F5BBD2342B88460400593866 /* RemoteImageView.swift in Sources */,
 				F5BBD2252B851F6400593866 /* TitleView.swift in Sources */,
 				2A2DB6E52B8834C10058044A /* UserLocation.swift in Sources */,
@@ -391,7 +395,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"running.io/Preview Content\"";
-				DEVELOPMENT_TEAM = Q22Z7PDA6N;
+				DEVELOPMENT_TEAM = YVXUM882PV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "running-io-Info.plist";
@@ -408,7 +412,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "app.Nakamura.aoichi.running-io-223";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.Nakamura.aoichi.running-io-225";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -424,7 +428,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"running.io/Preview Content\"";
-				DEVELOPMENT_TEAM = Q22Z7PDA6N;
+				DEVELOPMENT_TEAM = YVXUM882PV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "running-io-Info.plist";
@@ -441,7 +445,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "app.Nakamura.aoichi.running-io-223";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.Nakamura.aoichi.running-io-225";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
