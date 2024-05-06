@@ -8,9 +8,17 @@
 import SwiftUI
 
 struct FriendProfileView: View {
-    let friend: ProfileView.Friend
+    let friend: Friend
     
     var body: some View {
-        ProfileView(userID: friend.id, totalScore: friend.friendScore, showUsernameEditUI: false, showFriendSearchUI: false)
+        ProfileView(userID: friend.id, showUsernameEditUI: false, showFriendSearchUI: false)
+    }
+}
+
+struct FriendProfileView_Previews: PreviewProvider {
+    static var previews: some View {
+        FriendProfileView(
+            friend: Friend(id: "testID", username: "Test Friend", friendScore: 100, imageUrl: nil)
+        )
     }
 }

@@ -17,6 +17,8 @@
 		2AD2607C2B7C433F000265A4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2AD2607B2B7C433F000265A4 /* Preview Assets.xcassets */; };
 		2AD260842B7CCD1A000265A4 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD260832B7CCD1A000265A4 /* LocationManager.swift */; };
 		2AD260862B7DBF88000265A4 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD260852B7DBF88000265A4 /* MapView.swift */; };
+		F5199D232BE9221900F6B782 /* ProfileController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5199D222BE9221900F6B782 /* ProfileController.swift */; };
+		F5199D252BE9223500F6B782 /* ProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5199D242BE9223500F6B782 /* ProfileModel.swift */; };
 		F5861F782BDB247300FD5EE4 /* FriendProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5861F772BDB247300FD5EE4 /* FriendProfileView.swift */; };
 		F5BBD2152B84B2D100593866 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F5BBD2142B84B2D100593866 /* GoogleSignIn */; };
 		F5BBD2172B84B34D00593866 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */; };
@@ -45,6 +47,8 @@
 		2AD260822B7CCA24000265A4 /* running-io-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "running-io-Info.plist"; sourceTree = SOURCE_ROOT; };
 		2AD260832B7CCD1A000265A4 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		2AD260852B7DBF88000265A4 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		F5199D222BE9221900F6B782 /* ProfileController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileController.swift; sourceTree = "<group>"; };
+		F5199D242BE9223500F6B782 /* ProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModel.swift; sourceTree = "<group>"; };
 		F5861F772BDB247300FD5EE4 /* FriendProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendProfileView.swift; sourceTree = "<group>"; };
 		F5BBD2162B84B34D00593866 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F5BBD2222B85138200593866 /* UserSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSession.swift; sourceTree = "<group>"; };
@@ -91,6 +95,7 @@
 		2AD260732B7C433E000265A4 /* running.io */ = {
 			isa = PBXGroup;
 			children = (
+				F5199D212BE9220D00F6B782 /* Controllers */,
 				F5C72EED2BC9292200BE0843 /* Models */,
 				F5C72EEC2BC9291100BE0843 /* Resources */,
 				F5C72EEB2BC928DD00BE0843 /* Utilities */,
@@ -109,6 +114,14 @@
 				2AD2607B2B7C433F000265A4 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		F5199D212BE9220D00F6B782 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				F5199D222BE9221900F6B782 /* ProfileController.swift */,
+			);
+			path = Controllers;
 			sourceTree = "<group>";
 		};
 		F5BBD2262B86CEAB00593866 /* fonts */ = {
@@ -166,6 +179,7 @@
 				F5BBD2222B85138200593866 /* UserSession.swift */,
 				2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */,
 				2A2DB6E42B8834C10058044A /* UserLocation.swift */,
+				F5199D242BE9223500F6B782 /* ProfileModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -259,7 +273,9 @@
 				F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */,
 				2A9BBD2F2BDF86D500E78656 /* BadgeGetView.swift in Sources */,
 				2AD260862B7DBF88000265A4 /* MapView.swift in Sources */,
+				F5199D232BE9221900F6B782 /* ProfileController.swift in Sources */,
 				F5BBD2322B88421300593866 /* ImageLoader.swift in Sources */,
+				F5199D252BE9223500F6B782 /* ProfileModel.swift in Sources */,
 				F5861F782BDB247300FD5EE4 /* FriendProfileView.swift in Sources */,
 				2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */,
 				2AD260842B7CCD1A000265A4 /* LocationManager.swift in Sources */,

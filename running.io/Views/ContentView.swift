@@ -9,7 +9,6 @@ import SwiftUI
 import MapKit
 import FirebaseDatabase
 
-
 struct BottomCardView: View {
     var areaScore: Double?
     var userUID: String
@@ -25,7 +24,7 @@ struct BottomCardView: View {
                 .gesture(DragGesture().onChanged { value in
                     self.offset = value.translation
                 }.onEnded { value in
-                    if value.translation.height > 50 { // 下にドラッグした距離が100を超えた場合、ビューを閉じる
+                    if value.translation.height > 50 { // 下にドラッグした距離が50を超えた場合、ビューを閉じる
                         self.offset = CGSize(width: 0, height: 120) // モーダルを下に隠す
                     } else {
                         self.offset = .zero // 元の位置に戻す
@@ -83,18 +82,18 @@ struct BottomCardView: View {
     }
 
     private func fetchFriendsAndTheirScores() {
-            let friendsRef = Database.database().reference(withPath: "users/\(userUID)/friends")
-            friendsRef.observeSingleEvent(of: .value) { snapshot in
-                var friendsUIDs = [String]()
-                for child in snapshot.children {
-                    if let childSnapshot = child as? DataSnapshot {
-                        friendsUIDs.append(childSnapshot.key)
-                    }
+        let friendsRef = Database.database().reference(withPath: "users/\(userUID)/friends")
+        friendsRef.observeSingleEvent(of: .value) { snapshot in
+            var friendsUIDs = [String]()
+            for child in snapshot.children {
+                if let childSnapshot = child as? DataSnapshot {
+                    friendsUIDs.append(childSnapshot.key)
                 }
-                friendsUIDs.append(self.userUID)
-                observeScoresForFriends(friendsUIDs)
             }
+            friendsUIDs.append(self.userUID)
+            observeScoresForFriends(friendsUIDs)
         }
+    }
 
     private func observeScoresForFriends(_ friendUIDs: [String]) {
         let usersRef = Database.database().reference(withPath: "users")
@@ -116,7 +115,6 @@ struct BottomCardView: View {
         }
     }
 }
-
 
 struct FullScreenMapView: View {
     @EnvironmentObject var userSession: UserSession
@@ -185,7 +183,6 @@ struct FullScreenMapView: View {
                 Spacer()
             }
 
-
             BottomCardView(areaScore: areaScore, userUID: userUID)
                 .offset(y: 50)
                 .edgesIgnoringSafeArea(.bottom)
@@ -205,7 +202,7 @@ struct FullScreenMapView: View {
             }
         }
         .sheet(isPresented: $showProfileView) {
-            ProfileView(userID: userUID, totalScore: areaScore ?? 0.0)
+            ProfileView(userID: userUID)
         }
         .onAppear {
             fetchUserProfileImage()
