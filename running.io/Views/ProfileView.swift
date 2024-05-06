@@ -36,6 +36,7 @@ struct ProfileView: View {
     // フレンド画面ではユーザー名の編集とフレンドの検索UIを非表示に
     @State private var showUsernameEditUI: Bool
     @State private var showFriendSearchUI: Bool
+    @State private var selectedTab = "フレンド"
     
     init(userID: String, totalScore: Double, showUsernameEditUI: Bool = true, showFriendSearchUI: Bool = true) {
         self.userID = userID
@@ -297,7 +298,16 @@ struct ProfileView: View {
                     .padding(.top, 12)
                     
                     // フレンドリスト
-                    if showFriendSearchUI {
+                    if selectedTab == "リクエスト" {
+                        FriendRequestsView(
+                            searchText: $searchText,
+                            searchResults: $searchResults,
+                            showingSearchResults: $showingSearchResults,
+                            friends: $friends,
+                            fetchUsers: fetchUsers,
+                            addFriend: addFriend
+                        )
+                    } else {
                         FriendListView(
                             searchText: $searchText,
                             searchResults: $searchResults,
@@ -307,6 +317,8 @@ struct ProfileView: View {
                             addFriend: addFriend
                         )
                     }
+                    
+                    CustomSegmentedPicker(selectedTab: $selectedTab, tabs: ["フレンド", "リクエスト"])
                 }
                 .onAppear(perform: {
                     fetchUserData()
@@ -327,6 +339,36 @@ struct ProfileView: View {
             }
             .background(Color.orange.opacity(0.2))
         }
+    }
+}
+
+struct CustomSegmentedControlStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(8)
+            .background(Color.white) // ピッカー全体の背景を白くする
+            .cornerRadius(20) // 角を丸くする
+            .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 4) // 全体に影をつける
+    }
+}
+
+struct CustomSegmentedPicker: View {
+    @Binding var selectedTab: String
+    let tabs: [String]
+
+    var body: some View {
+        Picker("", selection: $selectedTab) {
+            ForEach(tabs, id: \.self) { tab in
+                Text(tab)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 20)
+                    .background(self.selectedTab == tab ? Color.gray.opacity(0.2) : Color.white)
+                    .cornerRadius(10)
+            }
+        }
+        .pickerStyle(SegmentedPickerStyle())
+        .modifier(CustomSegmentedControlStyle())
+        .padding(.horizontal, 60)
     }
 }
 
@@ -510,10 +552,10 @@ struct FriendListView: View {
                         }
                     }
                     .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                    .padding(7)
+                    .padding(10)
                     .padding(.horizontal, 25)
                     .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                    .cornerRadius(25)
                     .overlay(
                         HStack {
                             Image(systemName: "magnifyingglass")
@@ -532,18 +574,12 @@ struct FriendListView: View {
                             }
                         }
                     )
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 10)
-                
-                Button(action: {
-                    fetchUsers(searchText)
-                    showingSearchResults = true // 検索ボタンが押されたことを示す
-                }) {
-                    Image(systemName: "magnifyingglass")
-                }
-                .padding(.trailing, 10)
+                    .padding(.horizontal, 30)
             }
             .padding(.vertical, 10)
+            
+            let filteredFriends = friends.filter { friend in searchText.isEmpty || friend.username.localizedCaseInsensitiveContains(searchText)
+            }
             
             if showingSearchResults {
                 if searchResults.isEmpty {
@@ -576,48 +612,128 @@ struct FriendListView: View {
                     }
                 }
             } else {
-                if friends.isEmpty {
-                    Text("フレンドがいません🥺")
+                ForEach(0..<filteredFriends.count, id: \.self) { index in
+                    NavigationLink(destination: FriendProfileView(friend: filteredFriends[index])) {
+                        HStack {
+                            if let imageUrl = filteredFriends[index].imageUrl, let url = URL(string: imageUrl) {
+                                RemoteImageView(url: url)
+                                    .frame(width: 50, height: 50)
+                                    .clipShape(Circle())
+                                    .padding(.horizontal, 10)
+                            } else {
+                                Image(systemName: "person.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 50, height: 50)
+                                    .background(Color.gray.opacity(0.3))
+                                    .clipShape(Circle())
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(filteredFriends[index].username)
+                                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                    .foregroundColor(.black)
+                                Text("スコア：\(filteredFriends[index].friendScore, specifier: "%.0f")")
+                                    .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                                    .foregroundColor(.gray)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 5)
+                        Divider()
+                    }
+                }
+            }
+        }
+        .background(Color.white)
+        .cornerRadius(10)
+        .padding()
+        .padding(.bottom, 50)
+    }
+}
+
+struct FriendRequestsView: View {
+    @Binding var searchText: String
+    @Binding var searchResults: [ProfileView.Friend]
+    @Binding var showingSearchResults: Bool
+    @Binding var friends: [ProfileView.Friend]
+    var fetchUsers: (String) -> Void
+    var addFriend: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                TextField("フレンドを検索", text: $searchText)
+                    .onChange(of: searchText) { newValue in
+                        if newValue.isEmpty {
+                            showingSearchResults = false
+                        }
+                    }
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(12)
+                    .padding(.horizontal, 25)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(25)
+                    .overlay(
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 8)
+                            
+                            if !searchText.isEmpty {
+                                Button(action: {
+                                    self.searchText = ""
+                                }) {
+                                    Image(systemName: "multiply.circle.fill")
+                                        .foregroundColor(.gray)
+                                        .padding(.trailing, 8)
+                                }
+                            }
+                        }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+                
+                Button(action: {
+                    fetchUsers(searchText)
+                    showingSearchResults = true
+                }) {
+                    Image(systemName: "magnifyingglass")
+                }
+                .padding(.trailing, 10)
+            }
+            .padding(.vertical, 10)
+            
+            if showingSearchResults {
+                if searchResults.isEmpty {
+                    Text("該当するユーザーが見つかりませんでした")
                         .font(Font.custom("DelaGothicOne-Regular", size: 16))
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 10)
-                    
-                    Spacer()
                 } else {
-                    ForEach(0..<friends.count, id: \.self) { index in
-                        NavigationLink(destination: FriendProfileView(friend: friends[index])) {
-                            HStack {
-                                if let imageUrl = friends[index].imageUrl, let url = URL(string: imageUrl) {
-                                    RemoteImageView(url: url)
-                                        .frame(width: 50, height: 50)
-                                        .clipShape(Circle())
-                                        .padding(.horizontal, 10)
-                                } else {
-                                    Image(systemName: "person.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 50, height: 50)
-                                        .background(Color.gray.opacity(0.3))
-                                        .clipShape(Circle())
-                                }
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(friends[index].username)
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                                        .foregroundColor(.black)
-                                    Text("スコア：\(friends[index].friendScore, specifier: "%.0f")")
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
-                                        .foregroundColor(.gray)
-                                }
-                                Spacer()
+                    ForEach(searchResults, id: \.id) { user in
+                        HStack {
+                            Text(user.username)
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                .foregroundColor(.black)
+                                .padding(.vertical, 2)
+                                .padding(.leading, 20)
+                            
+                            Spacer()
+                            
+                            Button("追加") {
+                                addFriend(user.id)
                             }
-                            .padding(.vertical, 5)
-                            Divider()
+                            .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                            .padding(.trailing, 20)
                         }
+                        .padding(.leading, 20)
+                        
+                        Divider()
                     }
-                    //.padding(.vertical, 10)
                 }
             }
         }
@@ -657,5 +773,16 @@ struct ImagePicker: UIViewControllerRepresentable {
             }
             parent.presentationMode.wrappedValue.dismiss() // 画像ピッカーを閉じる
         }
+    }
+}
+
+struct ProfileView_Previews: PreviewProvider {
+    static var previews: some View {
+        ProfileView(
+            userID: "wzGHgKx0dLhnxzR2qZzS1mrgjo92",
+            totalScore: 1234.0,
+            showUsernameEditUI: true,
+            showFriendSearchUI: true
+        )
     }
 }
