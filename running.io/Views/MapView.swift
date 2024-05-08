@@ -8,6 +8,8 @@ struct MapView: UIViewRepresentable {
     var userUID: String
     
     var ref: DatabaseReference! = Database.database().reference()
+    
+    var mapView: MKMapView = MKMapView()
 
        func makeUIView(context: Context) -> MKMapView {
            let mapView = MKMapView()
@@ -43,10 +45,36 @@ struct MapView: UIViewRepresentable {
 
            func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
                if let location = locations.last {
-                   let center = CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
-                   parent.locationManager.location = location
-                   parent.locationManager.locations.append(center)
-                   parent.locationManager.region = MKCoordinateRegion(center: center, latitudinalMeters: 1000.0, longitudinalMeters: 1000.0)
+                   let speedKmH = location.speed * 3.6  // Convert speed from m/s to km/h
+                   if speedKmH >= 30 {
+                       // Speed is above 30 km/h, save and reset the polygon
+                       if !parent.locationManager.locations.isEmpty {
+                           saveAndResetPolygon()
+                       }
+                       parent.locationManager.locations.removeAll()  // Ensure locations are cleared
+                   } else {
+                       // Speed is below 30 km/h, update the location
+                       let center = CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+                       parent.locationManager.location = location
+
+                       // Start a new polyline if it was previously stopped due to high speed
+                       if parent.locationManager.locations.isEmpty {
+                           parent.locationManager.locations.append(center)
+                           // Optionally start a new polygon if needed
+                       } else {
+                           parent.locationManager.locations.append(center)
+                           parent.updatePolyline(for: parent.mapView)  // Update polyline with new location
+                       }
+                       parent.locationManager.region = MKCoordinateRegion(center: center, latitudinalMeters: 1000.0, longitudinalMeters: 1000.0)
+                   }
+               }
+           }
+
+           func saveAndResetPolygon() {
+               if !parent.locationManager.locations.isEmpty {
+                   let polygon = MKPolygon(coordinates: parent.locationManager.locations, count: parent.locationManager.locations.count)
+                   parent.mapView.addOverlay(polygon)
+                   parent.locationManager.locations.removeAll()  // リストをクリア
                }
            }
            
@@ -156,26 +184,54 @@ struct MapView: UIViewRepresentable {
     }
 
 extension MapView {
-    func updatePolyline(for mapView: MKMapView) {
-        let currentUserId = Auth.auth().currentUser?.uid
-        let polylinesToRemove = mapView.overlays.compactMap { $0 as? MKPolyline }.filter { $0.title == currentUserId }
-        mapView.removeOverlays(polylinesToRemove)
-
-        // 新しい座標でポリラインを作成
-        let coordinates = locationManager.locations
-        if coordinates.count > 1 {
-            let newPolyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-            newPolyline.title = currentUserId
-            mapView.addOverlay(newPolyline)
+    func updatePolyline(for mapView: MKMapView, minimumDistance: CLLocationDistance = 20) { // 500メートルを距離の閾値とする
+        guard let lastLocation = locationManager.location, lastLocation.speed * 3.6 < 30 else {
+            print("Skipping polyline update due to high speed (> 30 km/h)")
+            return  // 30 km/h 以上の速度であればポリラインの更新をスキップ
         }
 
-        // ログ出力
+        let currentUserId = Auth.auth().currentUser?.uid
+        let existingPolylines = mapView.overlays.compactMap { $0 as? MKPolyline }
+        let polylinesForCurrentUser = existingPolylines.filter { $0.title == currentUserId }
+
+        let coordinates = locationManager.locations
+        if coordinates.count > 1 {
+            if let lastPolyline = polylinesForCurrentUser.last {
+                var lastCoordinate = CLLocationCoordinate2D()
+                // 最後の座標を取得
+                lastPolyline.getCoordinates(&lastCoordinate, range: NSRange(location: lastPolyline.pointCount - 1, length: 1))
+
+                let lastCLLocation = CLLocation(latitude: lastCoordinate.latitude, longitude: lastCoordinate.longitude)
+                let newLocation = CLLocation(latitude: coordinates.first!.latitude, longitude: coordinates.first!.longitude)
+                
+                let distance = lastCLLocation.distance(from: newLocation)
+                print("Distance to last polyline: \(distance) meters")
+                
+                if distance > minimumDistance {
+                    locationManager.locations.removeAll()  // 座標リストをクリア
+                    locationManager.locations.append(contentsOf: [lastLocation.coordinate, coordinates.first!])  // 新しいポリラインの開始点として追加
+                    let newPolyline = MKPolyline(coordinates: locationManager.locations, count: locationManager.locations.count)
+                    newPolyline.title = currentUserId
+                    mapView.addOverlay(newPolyline)
+                }
+
+            } else {
+                // 既存のポリラインがない場合、または最後の座標が取得できない場合、新しいポリラインを追加
+                let newPolyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+                newPolyline.title = currentUserId
+                mapView.addOverlay(newPolyline)
+            }
+        }
+        
         print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         if let lastLocation = coordinates.last {
-            // Firebase Databaseを更新
             uploadLocation(latitude: lastLocation.latitude, longitude: lastLocation.longitude)
         }
     }
+
+
+
+
     
     func uploadLocation(latitude: Double, longitude: Double) {
         // 位置情報のデータを準備
@@ -215,34 +271,34 @@ extension MapView {
 
 
     func updateUserPolygonsOnMap(_ uiView: MKMapView) {
-        let existingPolygons = uiView.overlays.compactMap { $0 as? MKPolygon }
-        let existingPolygonIds = Set(existingPolygons.map { $0.title ?? "" })
+           let existingPolygons = uiView.overlays.compactMap { $0 as? MKPolygon }
+           let existingPolygonIds = Set(existingPolygons.map { $0.title ?? "" })
 
-        var newPolygonsToAdd: [MKPolygon] = []
+           var newPolygonsToAdd: [MKPolygon] = []
 
-        for (userId, coordinates) in locationManager.userLocationsHistory {
-            guard coordinates.count > 2 else { continue }
+           for (userId, coordinates) in locationManager.userLocationsHistory {
+               guard coordinates.count > 2 else { continue }
 
-            let newPolygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
-            newPolygon.title = userId
+               let newPolygon = MKPolygon(coordinates: coordinates, count: coordinates.count)
+               newPolygon.title = userId
 
-            // 既存のポリゴンを削除する前に新しいポリゴンを追加
-            uiView.addOverlay(newPolygon)
-            newPolygonsToAdd.append(newPolygon)
+               // 既存のポリゴンを削除する前に新しいポリゴンを追加
+               uiView.addOverlay(newPolygon)
+               newPolygonsToAdd.append(newPolygon)
 
-            // 既存のポリゴンを更新するか新しいポリゴンを追加するか判断
-            if existingPolygonIds.contains(userId) {
-                // 既存のポリゴンを見つけて削除
-                if let existingPolygon = existingPolygons.first(where: { $0.title == userId }) {
-                    uiView.removeOverlay(existingPolygon)
-                }
-            }
-        }
+               // 既存のポリゴンを更新するか新しいポリゴンを追加するか判断
+               if existingPolygonIds.contains(userId) {
+                   // 既存のポリゴンを見つけて削除
+                   if let existingPolygon = existingPolygons.first(where: { $0.title == userId }) {
+                       uiView.removeOverlay(existingPolygon)
+                   }
+               }
+           }
 
-        // 不要になった既存のポリゴンを削除
-        let polygonsToRemove = existingPolygons.filter { !newPolygonsToAdd.contains($0) }
-        uiView.removeOverlays(polygonsToRemove)
-    }
+           // 不要になった既存のポリゴンを削除
+           let polygonsToRemove = existingPolygons.filter { !newPolygonsToAdd.contains($0) }
+           uiView.removeOverlays(polygonsToRemove)
+       }
     
     
     func updateUserAnnotationsOnMap(_ uiView: MKMapView) {

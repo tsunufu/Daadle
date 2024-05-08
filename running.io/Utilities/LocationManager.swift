@@ -19,6 +19,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var allUserLocations: [String: [String: Any]] = [:]
     @Published var userLocationsHistory: [String: [CLLocationCoordinate2D]] = [:]
     @Published var isAlwaysAuthorized: Bool = false
+    @Published var isSpeedTooHigh: Bool = false
     var currentUserID: String? = Auth.auth().currentUser?.uid
         
     var ref: DatabaseReference = Database.database().reference()
