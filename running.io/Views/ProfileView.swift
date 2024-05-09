@@ -440,56 +440,6 @@ struct FriendRequestsView: View {
                         .foregroundColor(.gray)
                         .padding()
                 } else {
-//                    List(filteredFriendRequests) { request in
-//                        Text("受信したフレンドのnameは\(request.username)です")
-//                            .foregroundColor(.black)
-//                            .padding()
-//                        HStack {
-//                            Text("受信したフレンドのnameは\(request.username)です")
-//                                .foregroundColor(.black)
-//                                .padding()
-//                            if let imageUrl = request.imageUrl, let url = URL(string: imageUrl) {
-//                                RemoteImageView(url: url)
-//                                    .frame(width: 50, height: 50)
-//                                    .clipShape(Circle())
-//                            } else {
-//                                Image(systemName: "person.crop.circle.fill")
-//                                    .resizable()
-//                                    .scaledToFit()
-//                                    .frame(width: 50, height: 50)
-//                                    .clipShape(Circle())
-//                            }
-//
-//                            Text(request.username)
-//                                .font(.body)
-//                                .foregroundColor(.primary)
-//
-//                            Spacer()
-//
-//                            Button(action: {
-//                                handleRequest(request.id, true)
-//                            }) {
-//                                Text("承認")
-//                                    .foregroundColor(.white)
-//                                    .padding()
-//                                    .background(Color.green)
-//                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-//                            }
-//                            .buttonStyle(PlainButtonStyle())
-//
-//                            Button(action: {
-//                                handleRequest(request.id, false)
-//                            }) {
-//                                Text("拒否")
-//                                    .foregroundColor(.white)
-//                                    .padding()
-//                                    .background(Color.red)
-//                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-//                            }
-//                            .buttonStyle(PlainButtonStyle())
-//                        }
-//                        .padding(.vertical, 4)
-//                    }
                     ForEach(0..<filteredFriendRequests.count, id: \.self) { index in
                             HStack {
                                 if let imageUrl = filteredFriendRequests[index].imageUrl, let url = URL(string: imageUrl) {
@@ -560,7 +510,7 @@ struct SearchBar: View {
 
     var body: some View {
         HStack {
-            if showingSearchResults {
+            if showFriendSearchUI {
                 TextField("フレンドを検索", text: $searchText)
                     .onChange(of: searchText) { newValue in
                         if newValue.isEmpty {
