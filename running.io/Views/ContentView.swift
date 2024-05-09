@@ -127,6 +127,10 @@ struct FullScreenMapView: View {
     @State private var locationsCount: Int = 0
     @State private var profileImageUrl: String?
     @State private var isImageTapped = false
+    
+    var showUsernameEditUI: Bool = true
+    var showFriendSearchUI: Bool = true
+    var showCustomSegmentedPicker: Bool = true
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -202,7 +206,7 @@ struct FullScreenMapView: View {
             }
         }
         .sheet(isPresented: $showProfileView) {
-            ProfileView(userID: userUID)
+            ProfileView(userID: userUID, showUsernameEditUI: showUsernameEditUI, showFriendSearchUI: showFriendSearchUI, showCustomSegmentedPicker: showCustomSegmentedPicker)
         }
         .onAppear {
             fetchUserProfileImage()
