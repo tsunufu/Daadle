@@ -19,6 +19,7 @@ class ProfileController: ObservableObject {
     @Published var isLoadingUserName = true
     @Published var userNameLoadFailed = false
     @Published var showMessage = false
+    @Published var friendRequests: [FriendRequest] = []
     
     var userID: String
     var dataTask: URLSessionDataTask?
@@ -27,6 +28,7 @@ class ProfileController: ObservableObject {
         self.userID = userID
         fetchUserData()
         fetchFriends()
+        fetchFriendRequests()
     }
 
     func fetchUserData() {
@@ -160,6 +162,80 @@ class ProfileController: ObservableObject {
                 print("フレンドが正常に追加されました")
                 self.fetchFriends()
             }
+        }
+    }
+    
+    func sendFriendRequest(_ friendId: String) {
+        let friendRequestsRef = Database.database().reference(withPath: "users/\(friendId)/friendRequests/\(userID)")
+        friendRequestsRef.setValue(["status": "pending"]) { error, _ in
+            if let error = error {
+                print("フレンドリクエストの送信に失敗しました: \(error.localizedDescription)")
+            } else {
+                print("フレンドリクエストが正常に送信されました")
+            }
+        }
+    }
+    
+    func fetchFriendRequests() {
+        let friendRequestsRef = Database.database().reference(withPath: "users/\(userID)/friendRequests")
+        friendRequestsRef.observe(.value, with: { snapshot in
+            var newRequests: [FriendRequest] = []
+            for child in snapshot.children {
+                guard let childSnapshot = child as? DataSnapshot,
+                      let value = childSnapshot.value as? [String: Any],
+                      let status = value["status"] as? String,
+                      status == "pending" else {
+                        continue
+                }
+
+                // 各フレンドリクエストに対してユーザー情報を取得
+                let requesterId = childSnapshot.key
+                self.fetchUserInfo(userId: requesterId) { username, imageUrl in
+                    let friendRequest = FriendRequest(id: requesterId, username: username, imageUrl: imageUrl)
+                    DispatchQueue.main.async {
+                        newRequests.append(friendRequest)
+                        print("Fetched friend requests: \(newRequests)")
+                        self.friendRequests = newRequests
+                    }
+                }
+            }
+        })
+    }
+
+    // ユーザー情報を取得するヘルパーメソッド
+    func fetchUserInfo(userId: String, completion: @escaping (String, String?) -> Void) {
+        let userRef = Database.database().reference(withPath: "users/\(userId)")
+        userRef.observeSingleEvent(of: .value) { snapshot in
+            guard let dict = snapshot.value as? [String: Any],
+                  let username = dict["username"] as? String else {
+                completion("不明なユーザー", nil)
+                return
+            }
+            let imageUrl = dict["profileImageUrl"] as? String
+            completion(username, imageUrl)
+        }
+    }
+
+    
+    func handleFriendRequest(_ friendId: String, accept: Bool) {
+        let friendRequestRef = Database.database().reference(withPath: "users/\(userID)/friendRequests/\(friendId)")
+        if accept {
+            // 承認の場合、両者のフレンドリストに追加
+            let friendListRefUser = Database.database().reference(withPath: "users/\(userID)/friends/\(friendId)")
+            let friendListRefFriend = Database.database().reference(withPath: "users/\(friendId)/friends/\(userID)")
+            friendListRefUser.setValue(true)
+            friendListRefFriend.setValue(true) { error, _ in
+                if let error = error {
+                    print("フレンドの追加に失敗しました: \(error.localizedDescription)")
+                } else {
+                    print("フレンドをリストに追加しました")
+                    // リクエストを削除
+                    friendRequestRef.removeValue()
+                }
+            }
+        } else {
+            // 拒否の場合、リクエストを削除
+            friendRequestRef.removeValue()
         }
     }
 

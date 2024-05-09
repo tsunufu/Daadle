@@ -19,13 +19,15 @@ struct ProfileView: View {
     @State private var searchText = ""
     @State private var showingSearchResults = false
 
-    let showUsernameEditUI: Bool
-    let showFriendSearchUI: Bool
+    var showUsernameEditUI: Bool = true
+    var showFriendSearchUI: Bool = true
+    var showCustomSegmentedPicker: Bool = true
 
-    init(userID: String, showUsernameEditUI: Bool = true, showFriendSearchUI: Bool = true) {
+    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool) {
         _controller = StateObject(wrappedValue: ProfileController(userID: userID))
         self.showUsernameEditUI = showUsernameEditUI
         self.showFriendSearchUI = showFriendSearchUI
+        self.showCustomSegmentedPicker = showCustomSegmentedPicker
     }
 
     var body: some View {
@@ -59,7 +61,10 @@ struct ProfileView: View {
                             showingSearchResults: $showingSearchResults,
                             friends: $controller.friends,
                             fetchUsers: controller.fetchUsers,
-                            addFriend: controller.addFriend
+                            sendFriendRequest: controller.sendFriendRequest,
+                            showFriendSearchUI: showFriendSearchUI,
+                            friendRequests: $controller.friendRequests,
+                            handleRequest: controller.handleFriendRequest
                         )
                     } else {
                         FriendListView(
@@ -68,11 +73,14 @@ struct ProfileView: View {
                             showingSearchResults: $showingSearchResults,
                             friends: $controller.friends,
                             fetchUsers: controller.fetchUsers,
-                            addFriend: controller.addFriend
+                            sendFriendRequest: controller.sendFriendRequest,
+                            showFriendSearchUI: showFriendSearchUI
                         )
                     }
 
-                    CustomSegmentedPicker(selectedTab: $selectedTab, tabs: ["フレンド", "リクエスト"])
+                    if showCustomSegmentedPicker {
+                        CustomSegmentedPicker(selectedTab: $selectedTab, tabs: ["フレンド", "リクエスト"])
+                    }
                 }
                 .onDisappear {
                     controller.dataTask?.cancel()
@@ -191,7 +199,6 @@ struct BadgeView: View {
                 .font(Font.custom("DelaGothicOne-Regular", size: 16))
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
-                .padding(.leading, 10)
 
             if !userBadges.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -214,6 +221,7 @@ struct BadgeView: View {
                     .padding(.vertical, 10)
             }
         }
+        .padding(.leading, 30)
     }
 }
 
@@ -288,11 +296,12 @@ struct FriendListView: View {
     @Binding var showingSearchResults: Bool
     @Binding var friends: [Friend]
     var fetchUsers: (String) -> Void
-    var addFriend: (String) -> Void
+    var sendFriendRequest: (String) -> Void
+    var showFriendSearchUI: Bool
 
     var body: some View {
         VStack(alignment: .leading) {
-            SearchBar(searchText: $searchText, fetchUsers: fetchUsers, showingSearchResults: $showingSearchResults)
+            SearchBar(searchText: $searchText, fetchUsers: fetchUsers, showingSearchResults: $showingSearchResults, showFriendSearchUI: showFriendSearchUI)
 
             let filteredFriends = friends.filter { friend in searchText.isEmpty || friend.username.localizedCaseInsensitiveContains(searchText) }
 
@@ -315,8 +324,9 @@ struct FriendListView: View {
 
                             Spacer()
 
-                            Button("追加") {
-                                addFriend(user.id)
+                            Button("申請") {
+                                print("申請ボタンが押されました")
+                                sendFriendRequest(user.id)
                             }
                             .font(Font.custom("DelaGothicOne-Regular", size: 14))
                             .padding(.trailing, 20)
@@ -367,17 +377,32 @@ struct FriendListView: View {
     }
 }
 
+struct FriendRequest: Identifiable {
+    var id: String
+    var username: String
+    var imageUrl: String?
+}
+
 struct FriendRequestsView: View {
     @Binding var searchText: String
     @Binding var searchResults: [Friend]
     @Binding var showingSearchResults: Bool
     @Binding var friends: [Friend]
     var fetchUsers: (String) -> Void
-    var addFriend: (String) -> Void
+    var sendFriendRequest: (String) -> Void
+    var showFriendSearchUI: Bool
+    
+    @Binding var friendRequests: [FriendRequest]
+    var handleRequest: (String, Bool) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
-            SearchBar(searchText: $searchText, fetchUsers: fetchUsers, showingSearchResults: $showingSearchResults)
+            SearchBar(searchText: $searchText, fetchUsers: fetchUsers, showingSearchResults: $showingSearchResults, showFriendSearchUI: showFriendSearchUI)
+
+            let filteredFriendRequests = friendRequests.filter { request in
+                searchText.isEmpty || request.username.localizedCaseInsensitiveContains(searchText)
+            }
+            
 
             if showingSearchResults {
                 if searchResults.isEmpty {
@@ -398,8 +423,8 @@ struct FriendRequestsView: View {
 
                             Spacer()
 
-                            Button("追加") {
-                                addFriend(user.id)
+                            Button("申請") {
+                                sendFriendRequest(user.id)
                             }
                             .font(Font.custom("DelaGothicOne-Regular", size: 14))
                             .padding(.trailing, 20)
@@ -407,6 +432,64 @@ struct FriendRequestsView: View {
                         .padding(.leading, 20)
 
                         Divider()
+                    }
+                }
+            } else {
+                if filteredFriendRequests.isEmpty {
+                    Text("受信したフレンドリクエストはありません")
+                        .foregroundColor(.gray)
+                        .padding()
+                } else {
+                    ForEach(0..<filteredFriendRequests.count, id: \.self) { index in
+                            HStack {
+                                if let imageUrl = filteredFriendRequests[index].imageUrl, let url = URL(string: imageUrl) {
+                                    RemoteImageView(url: url)
+                                        .frame(width: 50, height: 50)
+                                        .clipShape(Circle())
+                                        .padding(.horizontal, 10)
+                                } else {
+                                    Image(systemName: "person.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50)
+                                        .background(Color.gray.opacity(0.3))
+                                        .clipShape(Circle())
+                                        .padding(.horizontal, 10)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(filteredFriendRequests[index].username)
+                                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                                        .foregroundColor(.black)
+                                }
+                                Spacer()
+                                Button(action: {
+                                    handleRequest(filteredFriendRequests[index].id, true)
+                                }) {
+                                    Image("User_add_alt_fill")  // ここをカスタムアセット名に置き換え
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)  // サイズ調整が必要な場合
+                                        .foregroundColor(.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+
+                                Button(action: {
+                                    handleRequest(filteredFriendRequests[index].id, false)
+                                }) {
+                                    Image("Close_round")  // ここをカスタムアセット名に置き換え
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)  // サイズ調整が必要な場合
+                                        .padding(.trailing, 10)
+                                        .foregroundColor(.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            .padding(.vertical, 5)
+                            Divider()
                     }
                 }
             }
@@ -418,52 +501,57 @@ struct FriendRequestsView: View {
     }
 }
 
+
 struct SearchBar: View {
     @Binding var searchText: String
     var fetchUsers: (String) -> Void
     @Binding var showingSearchResults: Bool
+    var showFriendSearchUI: Bool
 
     var body: some View {
         HStack {
-            TextField("フレンドを検索", text: $searchText)
-                .onChange(of: searchText) { newValue in
-                    if newValue.isEmpty {
-                        showingSearchResults = false
-                    }
-                }
-                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                .padding(12)
-                .padding(.horizontal, 25)
-                .background(Color(.systemGray6))
-                .cornerRadius(25)
-                .overlay(
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
-                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 8)
-
-                        if !searchText.isEmpty {
-                            Button(action: {
-                                self.searchText = ""
-                            }) {
-                                Image(systemName: "multiply.circle.fill")
-                                    .foregroundColor(.gray)
-                                    .padding(.trailing, 8)
-                            }
+            if showFriendSearchUI {
+                TextField("フレンドを検索", text: $searchText)
+                    .onChange(of: searchText) { newValue in
+                        if newValue.isEmpty {
+                            showingSearchResults = false
                         }
                     }
-                )
-                .padding(.horizontal, 10)
-                .padding(.vertical, 10)
-
-            Button(action: {
-                fetchUsers(searchText)
-                showingSearchResults = true
-            }) {
-                Image(systemName: "magnifyingglass")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(12)
+                    .padding(.horizontal, 25)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(25)
+                    .overlay(
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 8)
+                            
+                            if !searchText.isEmpty {
+                                Button(action: {
+                                    self.searchText = ""
+                                }) {
+                                    Image(systemName: "multiply.circle.fill")
+                                        .foregroundColor(.gray)
+                                        .padding(.trailing, 8)
+                                }
+                            }
+                        }
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+                
+                Button(action: {
+                    fetchUsers(searchText)
+                    showingSearchResults = true
+                }) {
+                    Image(systemName: "magnifyingglass")
+                }
+                
+                .padding(.trailing, 10)
             }
-            .padding(.trailing, 10)
         }
         .padding(.vertical, 10)
     }
