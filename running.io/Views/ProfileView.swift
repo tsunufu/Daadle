@@ -24,13 +24,15 @@ struct ProfileView: View {
     var showFriendSearchUI: Bool = true
     var showCustomSegmentedPicker: Bool = true
     var showBlockButton: Bool = true
+    var canEditProfileImage: Bool = true
 
-    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool, showBlockButton: Bool) {
+    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool, showBlockButton: Bool, canEditProfileImage: Bool = true) {
         _controller = StateObject(wrappedValue: ProfileController(userID: userID))
         self.showUsernameEditUI = showUsernameEditUI
         self.showFriendSearchUI = showFriendSearchUI
         self.showCustomSegmentedPicker = showCustomSegmentedPicker
         self.showBlockButton = showBlockButton
+        self.canEditProfileImage = canEditProfileImage
     }
 
     var body: some View {
@@ -38,7 +40,12 @@ struct ProfileView: View {
             ScrollView {
                 VStack(alignment: .center) {
                     // プロフィール画像
-                    ProfileImageView(selectedImage: $selectedImage, imageUrl: $controller.imageUrl, isImagePickerPresented: $isImagePickerPresented)
+                    ProfileImageView(
+                        selectedImage: $selectedImage,
+                        imageUrl: $controller.imageUrl,
+                        isImagePickerPresented: $isImagePickerPresented,
+                        canEdit: canEditProfileImage
+                    )
 
                     // ユーザー名の変更UI（ポップアップのボタン）
                     HStack {
@@ -202,43 +209,52 @@ struct ProfileImageView: View {
     @Binding var selectedImage: UIImage?
     @Binding var imageUrl: String?
     @Binding var isImagePickerPresented: Bool
+    var canEdit: Bool = true
 
     var body: some View {
-        if let selectedImage = selectedImage {
-            Image(uiImage: selectedImage)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                .shadow(radius: 10)
-                .padding(.top, 44)
-                .onTapGesture {
-                    self.isImagePickerPresented = true
-                }
-        } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
-            RemoteImageView(url: url)
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                .shadow(radius: 10)
-                .padding(.top, 44)
-                .onTapGesture {
-                    self.isImagePickerPresented = true
-                }
-        } else {
-            Image(systemName: "person.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                .shadow(radius: 10)
-                .padding(.top, 44)
-                .onTapGesture {
-                    self.isImagePickerPresented = true
-                }
+        Group {
+            if let selectedImage = selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    .shadow(radius: 10)
+                    .padding(.top, 44)
+                    .onTapGesture {
+                        if canEdit {
+                            self.isImagePickerPresented = true
+                        }
+                    }
+            } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
+                RemoteImageView(url: url)
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    .shadow(radius: 10)
+                    .padding(.top, 44)
+                    .onTapGesture {
+                        if canEdit {
+                            self.isImagePickerPresented = true
+                        }
+                    }
+            } else {
+                Image(systemName: "person.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    .shadow(radius: 10)
+                    .padding(.top, 44)
+                    .onTapGesture {
+                        if canEdit {
+                            self.isImagePickerPresented = true
+                        }
+                    }
+            }
         }
     }
 }

@@ -17,7 +17,8 @@ struct FriendProfileView: View {
                 showUsernameEditUI: false,
                 showFriendSearchUI: false,
                 showCustomSegmentedPicker: false,
-                showBlockButton: false
+                showBlockButton: false,
+                canEditProfileImage: false
             )
         }
     }
