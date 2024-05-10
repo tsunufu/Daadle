@@ -348,6 +348,9 @@ struct FriendListView: View {
     @Binding var searchResults: [Friend]
     @Binding var showingSearchResults: Bool
     @Binding var friends: [Friend]
+    @State private var isShowAlert = false
+    @State private var selectedFriendId: String?
+    
     var fetchUsers: (String) -> Void
     var sendFriendRequest: (String) -> Void
     var removeFriend: (String) -> Void
@@ -420,7 +423,8 @@ struct FriendListView: View {
                             Spacer()
                             if showBlockButton{
                                 Button(action: {
-                                    removeFriend(filteredFriends[index].id)
+                                    self.selectedFriendId = friends[index].id
+                                    self.isShowAlert = true
                                 }) {
                                     Image("Close_round")  // ここをカスタムアセット名に置き換え
                                         .resizable()
@@ -438,6 +442,16 @@ struct FriendListView: View {
                     }
                 }
             }
+        }
+        .alert("友達を削除", isPresented: $isShowAlert) {
+            Button("キャンセル", role: .cancel) { }
+            Button("OK", role: .destructive) {
+                if let id = selectedFriendId {
+                    removeFriend(id)
+                }
+            }
+        } message: {
+            Text("この友達をリストから削除してもよろしいですか？")
         }
         .background(Color.white)
         .cornerRadius(10)
@@ -457,6 +471,10 @@ struct FriendRequestsView: View {
     @Binding var searchResults: [Friend]
     @Binding var showingSearchResults: Bool
     @Binding var friends: [Friend]
+    
+    @State private var isShowAlert = false
+    @State private var selectedFriendId: String?
+    
     var fetchUsers: (String) -> Void
     var sendFriendRequest: (String) -> Void
     var showFriendSearchUI: Bool
@@ -545,7 +563,8 @@ struct FriendRequestsView: View {
                                 .buttonStyle(PlainButtonStyle())
 
                                 Button(action: {
-                                    handleRequest(filteredFriendRequests[index].id, false)
+                                    self.selectedFriendId = filteredFriendRequests[index].id
+                                    self.isShowAlert = true
                                 }) {
                                     Image("Close_round")  // ここをカスタムアセット名に置き換え
                                         .resizable()
@@ -562,6 +581,16 @@ struct FriendRequestsView: View {
                     }
                 }
             }
+        }
+        .alert("招待を拒否", isPresented: $isShowAlert) {
+            Button("いいえ", role: .cancel) { }
+            Button("はい", role: .destructive) {
+                if let id = selectedFriendId {
+                    handleRequest(id, false)
+                }
+            }
+        } message: {
+            Text("友達リクエストを拒否しますか？")
         }
         .background(Color.white)
         .cornerRadius(10)
