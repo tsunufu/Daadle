@@ -131,6 +131,7 @@ struct FullScreenMapView: View {
     var showUsernameEditUI: Bool = true
     var showFriendSearchUI: Bool = true
     var showCustomSegmentedPicker: Bool = true
+    var showBlockButton: Bool = true
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -206,7 +207,7 @@ struct FullScreenMapView: View {
             }
         }
         .sheet(isPresented: $showProfileView) {
-            ProfileView(userID: userUID, showUsernameEditUI: showUsernameEditUI, showFriendSearchUI: showFriendSearchUI, showCustomSegmentedPicker: showCustomSegmentedPicker)
+            ProfileView(userID: userUID, showUsernameEditUI: showUsernameEditUI, showFriendSearchUI: showFriendSearchUI, showCustomSegmentedPicker: showCustomSegmentedPicker, showBlockButton: showBlockButton)
         }
         .onAppear {
             fetchUserProfileImage()

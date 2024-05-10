@@ -23,12 +23,14 @@ struct ProfileView: View {
     var showUsernameEditUI: Bool = true
     var showFriendSearchUI: Bool = true
     var showCustomSegmentedPicker: Bool = true
+    var showBlockButton: Bool = true
 
-    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool) {
+    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool, showBlockButton: Bool) {
         _controller = StateObject(wrappedValue: ProfileController(userID: userID))
         self.showUsernameEditUI = showUsernameEditUI
         self.showFriendSearchUI = showFriendSearchUI
         self.showCustomSegmentedPicker = showCustomSegmentedPicker
+        self.showBlockButton = showBlockButton
     }
 
     var body: some View {
@@ -84,7 +86,9 @@ struct ProfileView: View {
                             friends: $controller.friends,
                             fetchUsers: controller.fetchUsers,
                             sendFriendRequest: controller.sendFriendRequest,
-                            showFriendSearchUI: showFriendSearchUI
+                            removeFriend: controller.removeFriend,
+                            showFriendSearchUI: showFriendSearchUI,
+                            showBlockButton: showBlockButton
                         )
                     }
 
@@ -346,7 +350,9 @@ struct FriendListView: View {
     @Binding var friends: [Friend]
     var fetchUsers: (String) -> Void
     var sendFriendRequest: (String) -> Void
+    var removeFriend: (String) -> Void
     var showFriendSearchUI: Bool
+    var showBlockButton: Bool
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -402,7 +408,7 @@ struct FriendListView: View {
                                     .background(Color.gray.opacity(0.3))
                                     .clipShape(Circle())
                             }
-
+                            
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(filteredFriends[index].username)
                                     .font(Font.custom("DelaGothicOne-Regular", size: 16))
@@ -412,6 +418,20 @@ struct FriendListView: View {
                                     .foregroundColor(.gray)
                             }
                             Spacer()
+                            if showBlockButton{
+                                Button(action: {
+                                    removeFriend(filteredFriends[index].id)
+                                }) {
+                                    Image("Close_round")  // ここをカスタムアセット名に置き換え
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)  // サイズ調整が必要な場合
+                                        .padding(.trailing, 10)
+                                        .foregroundColor(.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
                         }
                         .padding(.vertical, 5)
                         Divider()

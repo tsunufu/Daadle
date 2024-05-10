@@ -292,4 +292,28 @@ class ProfileController: ObservableObject {
             }
         }
     }
+    
+    func removeFriend(_ friendId: String) {
+        // 現在のユーザーから友達を削除
+        let currentUserFriendRef = Database.database().reference(withPath: "users/\(userID)/friends/\(friendId)")
+        currentUserFriendRef.removeValue { error, _ in
+            if let error = error {
+                print("友達の削除に失敗しました: \(error.localizedDescription)")
+            } else {
+                print("現在のユーザーの友達リストから削除されました。")
+                self.fetchFriends() // フレンドリストを再フェッチして更新
+            }
+        }
+        
+        // 友達のユーザーから現在のユーザーを削除
+        let friendUserFriendRef = Database.database().reference(withPath: "users/\(friendId)/friends/\(userID)")
+        friendUserFriendRef.removeValue { error, _ in
+            if let error = error {
+                print("友達の友達リストからの削除に失敗しました: \(error.localizedDescription)")
+            } else {
+                print("友達のユーザーの友達リストから削除されました。")
+            }
+        }
+    }
+
 }
