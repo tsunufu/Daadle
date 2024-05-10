@@ -42,16 +42,19 @@ class ProfileController: ObservableObject {
                 } else {
                     self.profile.userName = "読み込みに失敗！"
                     self.userNameLoadFailed = true
+                    print("Error: Unable to load username for userID \(self.userID)")
                 }
             }
         }
-
+        
         let imageUrlRef = Database.database().reference(withPath: "users/\(userID)/profileImageUrl")
         imageUrlRef.observeSingleEvent(of: .value) { snapshot in
             if let imageUrlString = snapshot.value as? String {
                 DispatchQueue.main.async {
                     self.imageUrl = imageUrlString
                 }
+            } else {
+                print("Error: Unable to load profile image URL for userID \(self.userID)")
             }
         }
         
@@ -61,6 +64,8 @@ class ProfileController: ObservableObject {
                 DispatchQueue.main.async {
                     self.profile.totalScore = score
                 }
+            } else {
+                print("Error: Unable to load score for userID \(self.userID)")
             }
         }
     }
