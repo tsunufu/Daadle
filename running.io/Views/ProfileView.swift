@@ -41,23 +41,25 @@ struct ProfileView: View {
                     ProfileImageView(selectedImage: $selectedImage, imageUrl: $controller.imageUrl, isImagePickerPresented: $isImagePickerPresented)
 
                     // ユーザー名の変更UI（ポップアップのボタン）
-                    if showUsernameEditUI {
-                        Button(action: {
-                            draftUsername = controller.profile.userName
-                            isUsernamePopupPresented = true
-                        }) {
-                            HStack {
-                                Text(controller.profile.userName)
-                                    .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                                    .fontWeight(.bold)
-                                    .foregroundColor(controller.userNameLoadFailed ? .red : .black)
+                    
+                    HStack {
+                        Text(controller.profile.userName)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                            .fontWeight(.bold)
+                            .foregroundColor(controller.userNameLoadFailed ? .red : .black)
 
+                        if showUsernameEditUI {
+                            Button(action: {
+                                draftUsername = controller.profile.userName
+                                isUsernamePopupPresented = true
+                            }) {
                                 Image(systemName: "pencil")
                                     .foregroundColor(.gray)
                             }
                         }
-                        .padding()
                     }
+                    .padding()
+
 
                     // バッジ表示ビュー
                     BadgeView(userBadges: controller.profile.badges)

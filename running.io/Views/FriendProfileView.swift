@@ -11,7 +11,13 @@ struct FriendProfileView: View {
     let friend: Friend
     
     var body: some View {
-        ProfileView(userID: friend.id, showUsernameEditUI: false, showFriendSearchUI: false, showCustomSegmentedPicker: false, showBlockButton: false)
+        ProfileView(
+            userID: friend.id,
+            showUsernameEditUI: false,
+            showFriendSearchUI: false,
+            showCustomSegmentedPicker: false,
+            showBlockButton: false
+        )
     }
 }
 
