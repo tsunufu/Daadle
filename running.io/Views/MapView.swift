@@ -18,7 +18,7 @@ struct MapView: UIViewRepresentable {
        }
 
        func updateUIView(_ uiView: MKMapView, context: Context) {
-           print("updateUIView is called")
+//           print("updateUIView is called")
            updatePolyline(for: uiView)
            updateUserLocationsOnMap(uiView)
            updateUserPolygonsOnMap(uiView)
@@ -170,7 +170,7 @@ extension MapView {
         }
 
         // ログ出力
-        print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
+//        print("Updating polyline with coordinates: \(coordinates.map { "\($0.latitude), \($0.longitude)" })")
         if let lastLocation = coordinates.last {
             // Firebase Databaseを更新
             uploadLocation(latitude: lastLocation.latitude, longitude: lastLocation.longitude)
@@ -185,9 +185,9 @@ extension MapView {
         // ユーザーIDに基づいて位置情報をFirebaseに保存
         ref.child("users").child(userUID).child("locations").setValue(locationData) { (error, reference) in
             if let error = error {
-                print("Data could not be saved: \(error.localizedDescription)")
+//                print("Data could not be saved: \(error.localizedDescription)")
             } else {
-                print("Data saved successfully!")
+//                print("Data saved successfully!")
             }
         }
     }

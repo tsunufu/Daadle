@@ -177,23 +177,29 @@ class ProfileController: ObservableObject {
     }
     
     func fetchFriendRequests() {
+        print("----------------------------------------")
         let friendRequestsRef = Database.database().reference(withPath: "users/\(userID)/friendRequests")
         friendRequestsRef.observe(.value, with: { snapshot in
             var newRequests: [FriendRequest] = []
             for child in snapshot.children {
                 guard let childSnapshot = child as? DataSnapshot,
-                      let value = childSnapshot.value as? [String: Any],
-                      let status = value["status"] as? String,
-                      status == "pending" else {
-                        continue
+                      let value = childSnapshot.value as? [String: Any] else {
+                    continue
                 }
 
-                // 各フレンドリクエストに対してユーザー情報を取得
+                // `status` キーのチェックを柔軟に
+                let status = value["status"] as? String
+                if status != "pending" {
+                    print("Status is not 'pending', but processing continues. Current status: \(String(describing: status))")
+                }
+
+                // ユーザー情報を取得してリクエストを作成
                 let requesterId = childSnapshot.key
                 self.fetchUserInfo(userId: requesterId) { username, imageUrl in
                     let friendRequest = FriendRequest(id: requesterId, username: username, imageUrl: imageUrl)
                     DispatchQueue.main.async {
                         newRequests.append(friendRequest)
+                        print("!!!!!!!!!!!!!!!!!!!")
                         print("Fetched friend requests: \(newRequests)")
                         self.friendRequests = newRequests
                     }
@@ -201,6 +207,7 @@ class ProfileController: ObservableObject {
             }
         })
     }
+
 
     // ユーザー情報を取得するヘルパーメソッド
     func fetchUserInfo(userId: String, completion: @escaping (String, String?) -> Void) {
@@ -231,11 +238,16 @@ class ProfileController: ObservableObject {
                     print("フレンドをリストに追加しました")
                     // リクエストを削除
                     friendRequestRef.removeValue()
+                    
+                    self.fetchFriends()
+                    self.fetchFriendRequests()
                 }
             }
         } else {
             // 拒否の場合、リクエストを削除
+            print("申請を拒否しました")
             friendRequestRef.removeValue()
+            self.fetchFriendRequests()
         }
     }
 
