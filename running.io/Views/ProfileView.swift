@@ -52,13 +52,15 @@ struct ProfileView: View {
     var showFriendSearchUI: Bool = true
     var showCustomSegmentedPicker: Bool = true
     var showBlockButton: Bool = true
+    var canEditProfileImage: Bool = true
 
-    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool, showBlockButton: Bool) {
+    init(userID: String, showUsernameEditUI: Bool, showFriendSearchUI: Bool, showCustomSegmentedPicker: Bool, showBlockButton: Bool, canEditProfileImage: Bool = true) {
         _controller = StateObject(wrappedValue: ProfileController(userID: userID))
         self.showUsernameEditUI = showUsernameEditUI
         self.showFriendSearchUI = showFriendSearchUI
         self.showCustomSegmentedPicker = showCustomSegmentedPicker
         self.showBlockButton = showBlockButton
+        self.canEditProfileImage = canEditProfileImage
     }
 
     var body: some View {
@@ -156,17 +158,22 @@ struct ProfileView: View {
                             controller.uploadImageToFirebase(image)
                         }
                     }
-                    .overlay(
-                        UsernameEditPopup(
-                            isPresented: $isUsernamePopupPresented,
-                            userName: $controller.profile.userName,
-                            draftUsername: $draftUsername,
-                            updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
-                        )
+                }
+            .background(Color(hex: "#FFF8F0"))
+
+                // Add the UsernameEditPopup overlay here
+                if isUsernamePopupPresented {
+                    Color.black.opacity(0.5)
+                        .edgesIgnoringSafeArea(.all)
+                        .blur(radius: 10)
+
+                    UsernameEditPopup(
+                        isPresented: $isUsernamePopupPresented,
+                        userName: $controller.profile.userName,
+                        draftUsername: $draftUsername,
+                        updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
                     )
                 }
-                .navigationBarHidden(true)
-                .background(Color(hex: "#FFF8F0"))
             }
         }
         .edgesIgnoringSafeArea(.top)
@@ -191,63 +198,60 @@ struct UsernameEditPopup: View {
     let updateUsername: () -> Void
 
     var body: some View {
-        if isPresented {
-            VStack {
-                VStack(spacing: 16) {
-                    Text("ユーザー名を編集")
-                        .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                        .fontWeight(.bold)
-                        .padding(.top, 20)
+        VStack {
+            VStack(spacing: 16) {
+                Text("ユーザー名を編集")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                    .padding(.top, 20)
 
-                    TextField("ユーザー名を入力", text: $draftUsername)
-                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                        .padding(10)
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .modifier(CustomTextFieldBorder())
+                TextField("ユーザー名を入力", text: $draftUsername)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(10)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .modifier(CustomTextFieldBorder())
 
-                    HStack {
-                        Button(action: {
-                            isPresented = false
-                        }) {
-                            Text("キャンセル")
-                                .foregroundColor(.red)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 16)
-                                .background(Color.gray.opacity(0.2))
-                                .cornerRadius(10)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            updateUsername()
-                            isPresented = false
-                        }) {
-                            Text("保存")
-                                .foregroundColor(.white)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 16)
-                                .background(Color.blue)
-                                .cornerRadius(10)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16
-                                                 ))
-                        }
+                HStack {
+                    Button(action: {
+                        isPresented = false
+                    }) {
+                        Text("キャンセル")
+                            .foregroundColor(.black)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(10)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+
+                    Spacer()
+
+                    Button(action: {
+                        updateUsername()
+                        isPresented = false
+                    }) {
+                        Text("保存")
+                            .foregroundColor(.black)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color(red: 0.87, green: 0.83, blue: 0.77))
+                            .cornerRadius(10)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    }
                 }
-                .padding()
-                .frame(width: 300)
-                .background(Color.white)
-                .cornerRadius(20)
-                .shadow(radius: 10)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black.opacity(0.5))
-            .ignoresSafeArea()
+            .padding()
+            .frame(width: 300)
+            .background(Color.white)
+            .cornerRadius(20)
+            .shadow(radius: 10)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.5))
+        .ignoresSafeArea()
     }
 }
 
@@ -255,43 +259,52 @@ struct ProfileImageView: View {
     @Binding var selectedImage: UIImage?
     @Binding var imageUrl: String?
     @Binding var isImagePickerPresented: Bool
+    var canEdit: Bool = true
 
     var body: some View {
-        if let selectedImage = selectedImage {
-            Image(uiImage: selectedImage)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color(hex: "#E29E5E"), lineWidth: 2))
-                .shadow(radius: 10)
-                .padding(.top, 44)
-                .onTapGesture {
-                    self.isImagePickerPresented = true
-                }
-        } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
-            RemoteImageView(url: url)
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color(hex: "#E29E5E"), lineWidth: 2))
-                .shadow(radius: 10)
-                .padding(.top, 44)
-                .onTapGesture {
-                    self.isImagePickerPresented = true
-                }
-        } else {
-            Image(systemName: "person.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(Circle().stroke(Color(hex: "#E29E5E"), lineWidth: 2))
-                .shadow(radius: 10)
-                .padding(.top, 44)
-                .onTapGesture {
-                    self.isImagePickerPresented = true
-                }
+        Group {
+            if let selectedImage = selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color(hex: "#E29E5E"), lineWidth: 2))
+                    .shadow(radius: 10)
+                    .padding(.top, 44)
+                    .onTapGesture {
+                        if canEdit {
+                            self.isImagePickerPresented = true
+                        }
+                    }
+            } else if let imageUrl = self.imageUrl, let url = URL(string: imageUrl) {
+                RemoteImageView(url: url)
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color(hex: "#E29E5E"), lineWidth: 2))
+                    .shadow(radius: 10)
+                    .padding(.top, 44)
+                    .onTapGesture {
+                        if canEdit {
+                            self.isImagePickerPresented = true
+                        }
+                    }
+            } else {
+                Image(systemName: "person.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    .shadow(radius: 10)
+                    .padding(.top, 44)
+                    .onTapGesture {
+                        if canEdit {
+                            self.isImagePickerPresented = true
+                        }
+                    }
+            }
         }
     }
 }
@@ -635,12 +648,13 @@ struct FriendRequestsView: View {
                             Divider()
                         }
                     }
+            } else {
+                if filteredFriendRequests.isEmpty {
+                    Text("受信したフレンドリクエストはありません")
+                        .foregroundColor(.gray)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
+                        .padding()
                 } else {
-                    if filteredFriendRequests.isEmpty {
-                        Text("受信したフレンドリクエストはありません")
-                            .foregroundColor(.gray)
-                            .padding()
-                    } else {
                         ForEach(0..<filteredFriendRequests.count, id: \.self) { index in
                             HStack {
                                 if let imageUrl = filteredFriendRequests[index].imageUrl, let url = URL(string: imageUrl) {
