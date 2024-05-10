@@ -37,93 +37,101 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .center) {
-                    // プロフィール画像
-                    ProfileImageView(
-                        selectedImage: $selectedImage,
-                        imageUrl: $controller.imageUrl,
-                        isImagePickerPresented: $isImagePickerPresented,
-                        canEdit: canEditProfileImage
-                    )
+            ZStack {
+                ScrollView {
+                    VStack(alignment: .center) {
+                        // プロフィール画像
+                        ProfileImageView(
+                            selectedImage: $selectedImage,
+                            imageUrl: $controller.imageUrl,
+                            isImagePickerPresented: $isImagePickerPresented,
+                            canEdit: canEditProfileImage
+                        )
 
-                    // ユーザー名の変更UI（ポップアップのボタン）
-                    HStack {
-                        Text(controller.profile.userName)
-                            .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                            .fontWeight(.bold)
-                            .foregroundColor(controller.userNameLoadFailed ? .red : .black)
+                        // ユーザー名の変更UI（ポップアップのボタン）
+                        HStack {
+                            Text(controller.profile.userName)
+                                .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                                .fontWeight(.bold)
+                                .foregroundColor(controller.userNameLoadFailed ? .red : .black)
 
-                        if showUsernameEditUI {
-                            Button(action: {
-                                draftUsername = controller.profile.userName
-                                isUsernamePopupPresented = true
-                            }) {
-                                Image(systemName: "pencil")
-                                    .foregroundColor(.gray)
+                            if showUsernameEditUI {
+                                Button(action: {
+                                    draftUsername = controller.profile.userName
+                                    isUsernamePopupPresented = true
+                                }) {
+                                    Image(systemName: "pencil")
+                                        .foregroundColor(.gray)
+                                }
                             }
                         }
+                        .padding()
+
+                        // バッジ表示ビュー
+                        BadgeView(userBadges: controller.profile.badges)
+
+                        // スコア表示ビュー
+                        ScoreView(totalScore: controller.profile.totalScore, streaks: controller.profile.streaks, wins: controller.profile.wins)
+
+                        // フレンドリスト
+                        if selectedTab == "リクエスト" {
+                            FriendRequestsView(
+                                searchText: $searchText,
+                                searchResults: $controller.searchResults,
+                                showingSearchResults: $showingSearchResults,
+                                friends: $controller.friends,
+                                fetchUsers: controller.fetchUsers,
+                                sendFriendRequest: controller.sendFriendRequest,
+                                showFriendSearchUI: showFriendSearchUI,
+                                friendRequests: $controller.friendRequests,
+                                handleRequest: controller.handleFriendRequest
+                            )
+                        } else {
+                            FriendListView(
+                                searchText: $searchText,
+                                searchResults: $controller.searchResults,
+                                showingSearchResults: $showingSearchResults,
+                                friends: $controller.friends,
+                                fetchUsers: controller.fetchUsers,
+                                sendFriendRequest: controller.sendFriendRequest,
+                                removeFriend: controller.removeFriend,
+                                showFriendSearchUI: showFriendSearchUI,
+                                showBlockButton: showBlockButton
+                            )
+                        }
+
+                        if showCustomSegmentedPicker {
+                            CustomSegmentedPicker(selectedTab: $selectedTab, tabs: ["フレンド", "リクエスト"])
+                        }
                     }
-                    .padding()
-
-                    // バッジ表示ビュー
-                    BadgeView(userBadges: controller.profile.badges)
-
-                    // スコア表示ビュー
-                    ScoreView(totalScore: controller.profile.totalScore, streaks: controller.profile.streaks, wins: controller.profile.wins)
-
-                    // フレンドリスト
-                    if selectedTab == "リクエスト" {
-                        FriendRequestsView(
-                            searchText: $searchText,
-                            searchResults: $controller.searchResults,
-                            showingSearchResults: $showingSearchResults,
-                            friends: $controller.friends,
-                            fetchUsers: controller.fetchUsers,
-                            sendFriendRequest: controller.sendFriendRequest,
-                            showFriendSearchUI: showFriendSearchUI,
-                            friendRequests: $controller.friendRequests,
-                            handleRequest: controller.handleFriendRequest
-                        )
-                    } else {
-                        FriendListView(
-                            searchText: $searchText,
-                            searchResults: $controller.searchResults,
-                            showingSearchResults: $showingSearchResults,
-                            friends: $controller.friends,
-                            fetchUsers: controller.fetchUsers,
-                            sendFriendRequest: controller.sendFriendRequest,
-                            removeFriend: controller.removeFriend,
-                            showFriendSearchUI: showFriendSearchUI,
-                            showBlockButton: showBlockButton
-                        )
+                    .onDisappear {
+                        controller.dataTask?.cancel()
                     }
-
-                    if showCustomSegmentedPicker {
-                        CustomSegmentedPicker(selectedTab: $selectedTab, tabs: ["フレンド", "リクエスト"])
+                    .sheet(isPresented: $isImagePickerPresented) {
+                        ImagePicker(selectedImage: $selectedImage)
+                    }
+                    .onChange(of: selectedImage) { newImage in
+                        if let image = newImage {
+                            controller.uploadImageToFirebase(image)
+                        }
                     }
                 }
-                .onDisappear {
-                    controller.dataTask?.cancel()
-                }
-                .sheet(isPresented: $isImagePickerPresented) {
-                    ImagePicker(selectedImage: $selectedImage)
-                }
-                .onChange(of: selectedImage) { newImage in
-                    if let image = newImage {
-                        controller.uploadImageToFirebase(image)
-                    }
-                }
-                .overlay(
+                .background(Color.orange.opacity(0.2))
+
+                // Add the UsernameEditPopup overlay here
+                if isUsernamePopupPresented {
+                    Color.black.opacity(0.5)
+                        .edgesIgnoringSafeArea(.all)
+                        .blur(radius: 10)
+
                     UsernameEditPopup(
                         isPresented: $isUsernamePopupPresented,
                         userName: $controller.profile.userName,
                         draftUsername: $draftUsername,
                         updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
                     )
-                )
+                }
             }
-            .background(Color.orange.opacity(0.2))
         }
     }
 }
@@ -145,62 +153,60 @@ struct UsernameEditPopup: View {
     let updateUsername: () -> Void
 
     var body: some View {
-        if isPresented {
-            VStack {
-                VStack(spacing: 16) {
-                    Text("ユーザー名を編集")
-                        .font(Font.custom("DelaGothicOne-Regular", size: 20))
-                        .fontWeight(.bold)
-                        .padding(.top, 20)
+        VStack {
+            VStack(spacing: 16) {
+                Text("ユーザー名を編集")
+                    .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                    .fontWeight(.bold)
+                    .padding(.top, 20)
 
-                    TextField("ユーザー名を入力", text: $draftUsername)
-                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                        .padding(10)
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .modifier(CustomTextFieldBorder())
+                TextField("ユーザー名を入力", text: $draftUsername)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    .padding(10)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .modifier(CustomTextFieldBorder())
 
-                    HStack {
-                        Button(action: {
-                            isPresented = false
-                        }) {
-                            Text("キャンセル")
-                                .foregroundColor(.black)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 16)
-                                .background(Color.gray.opacity(0.2))
-                                .cornerRadius(10)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            updateUsername()
-                            isPresented = false
-                        }) {
-                            Text("保存")
-                                .foregroundColor(.black)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 16)
-                                .background(Color(red: 0.87, green: 0.83, blue: 0.77))
-                                .cornerRadius(10)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                        }
+                HStack {
+                    Button(action: {
+                        isPresented = false
+                    }) {
+                        Text("キャンセル")
+                            .foregroundColor(.black)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(10)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+
+                    Spacer()
+
+                    Button(action: {
+                        updateUsername()
+                        isPresented = false
+                    }) {
+                        Text("保存")
+                            .foregroundColor(.black)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color(red: 0.87, green: 0.83, blue: 0.77))
+                            .cornerRadius(10)
+                            .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                    }
                 }
-                .padding()
-                .frame(width: 300)
-                .background(Color.white)
-                .cornerRadius(20)
-                .shadow(radius: 10)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black.opacity(0.5))
-            .ignoresSafeArea()
+            .padding()
+            .frame(width: 300)
+            .background(Color.white)
+            .cornerRadius(20)
+            .shadow(radius: 10)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.5))
+        .ignoresSafeArea()
     }
 }
 
