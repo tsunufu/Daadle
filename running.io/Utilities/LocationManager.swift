@@ -30,7 +30,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         dbRef.child("users").observe(.value, with: { snapshot in
             guard let usersDict = snapshot.value as? [String: AnyObject] else {
                 DispatchQueue.main.async {
-                    print("エラー: データをデコードできませんでした")
+//                    print("エラー: データをデコードできませんでした")
                 }
                 return
             }
@@ -49,7 +49,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             }
         }) { error in
             DispatchQueue.main.async {
-                print(error.localizedDescription)
+//                print(error.localizedDescription)
             }
         }
     }
@@ -61,7 +61,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             dbRef.child("users").observe(.value, with: { snapshot in
                 guard let usersDict = snapshot.value as? [String: AnyObject] else {
                     DispatchQueue.main.async {
-                        print("エラー: データをデコードできませんでした")
+//                        print("エラー: データをデコードできませんでした")
                     }
                     return
                 }
@@ -71,7 +71,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
                     if let locationDict = value["locations"] as? [String: AnyObject],
                        let latitude = locationDict["latitude"] as? Double,
                        let longitude = locationDict["longitude"] as? Double {
-                        print("ユーザー: \(key) - 緯度: \(latitude), 経度: \(longitude)")
+//                        print("ユーザー: \(key) - 緯度: \(latitude), 経度: \(longitude)")
                         newLocations[key] = ["latitude": latitude, "longitude": longitude]
                     }
                 }
@@ -80,7 +80,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
                 }
             }) { error in
                 DispatchQueue.main.async {
-                    print(error.localizedDescription)
+//                    print(error.localizedDescription)
                 }
             }
         }
