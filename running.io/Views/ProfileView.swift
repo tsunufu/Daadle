@@ -18,6 +18,7 @@ struct ProfileView: View {
     @State private var selectedTab = "フレンド"
     @State private var searchText = ""
     @State private var showingSearchResults = false
+    @State private var isUsernamePopupPresented = false
 
     var showUsernameEditUI: Bool = true
     var showFriendSearchUI: Bool = true
@@ -37,15 +38,24 @@ struct ProfileView: View {
                     // プロフィール画像
                     ProfileImageView(selectedImage: $selectedImage, imageUrl: $controller.imageUrl, isImagePickerPresented: $isImagePickerPresented)
 
-                    // ユーザー名の変更UI
-                    UsernameEditView(
-                        userName: $controller.profile.userName,
-                        draftUsername: $draftUsername,
-                        isEditing: $isEditing,
-                        userNameLoadFailed: $controller.userNameLoadFailed,
-                        showUsernameEditUI: showUsernameEditUI,
-                        updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
-                    )
+                    // ユーザー名の変更UI（ポップアップのボタン）
+                    if showUsernameEditUI {
+                        Button(action: {
+                            draftUsername = controller.profile.userName
+                            isUsernamePopupPresented = true
+                        }) {
+                            HStack {
+                                Text(controller.profile.userName)
+                                    .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(controller.userNameLoadFailed ? .red : .black)
+
+                                Image(systemName: "pencil")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding()
+                    }
 
                     // バッジ表示ビュー
                     BadgeView(userBadges: controller.profile.badges)
@@ -93,8 +103,93 @@ struct ProfileView: View {
                         controller.uploadImageToFirebase(image)
                     }
                 }
+                .overlay(
+                    UsernameEditPopup(
+                        isPresented: $isUsernamePopupPresented,
+                        userName: $controller.profile.userName,
+                        draftUsername: $draftUsername,
+                        updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
+                    )
+                )
             }
             .background(Color.orange.opacity(0.2))
+        }
+    }
+}
+
+struct CustomTextFieldBorder: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.gray, lineWidth: 1)
+            )
+    }
+}
+
+struct UsernameEditPopup: View {
+    @Binding var isPresented: Bool
+    @Binding var userName: String
+    @Binding var draftUsername: String
+    let updateUsername: () -> Void
+
+    var body: some View {
+        if isPresented {
+            VStack {
+                VStack(spacing: 16) {
+                    Text("ユーザー名を編集")
+                        .font(Font.custom("DelaGothicOne-Regular", size: 20))
+                        .fontWeight(.bold)
+                        .padding(.top, 20)
+
+                    TextField("ユーザー名を入力", text: $draftUsername)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                        .padding(10)
+                        .background(Color.white)
+                        .cornerRadius(10)
+                        .modifier(CustomTextFieldBorder())
+
+                    HStack {
+                        Button(action: {
+                            isPresented = false
+                        }) {
+                            Text("キャンセル")
+                                .foregroundColor(.red)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 16)
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(10)
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
+                        }
+
+                        Spacer()
+
+                        Button(action: {
+                            updateUsername()
+                            isPresented = false
+                        }) {
+                            Text("保存")
+                                .foregroundColor(.white)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 16)
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16
+                                                 ))
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+                .padding()
+                .frame(width: 300)
+                .background(Color.white)
+                .cornerRadius(20)
+                .shadow(radius: 10)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.5))
+            .ignoresSafeArea()
         }
     }
 }
@@ -140,52 +235,6 @@ struct ProfileImageView: View {
                 .onTapGesture {
                     self.isImagePickerPresented = true
                 }
-        }
-    }
-}
-
-struct UsernameEditView: View {
-    @Binding var userName: String
-    @Binding var draftUsername: String
-    @Binding var isEditing: Bool
-    @Binding var userNameLoadFailed: Bool
-    let showUsernameEditUI: Bool
-    let updateUsername: () -> Void
-
-    var body: some View {
-        HStack {
-            if isEditing {
-                TextField("ユーザー名を入力", text: $draftUsername)
-                    .font(Font.custom("DelaGothicOne-Regular", size: 16))
-                    .padding(10)
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    .padding(.trailing, 10)
-            } else {
-                Text(userName)
-                    .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                    .fontWeight(.bold)
-                    .foregroundColor(userNameLoadFailed ? .red : .black)
-            }
-
-            if showUsernameEditUI {
-                Button(action: {
-                    if self.isEditing {
-                        self.updateUsername()
-                    } else {
-                        self.draftUsername = self.userName
-                        self.isEditing = true
-                    }
-                }) {
-                    if isEditing {
-                        Image(systemName: "checkmark.square.fill")
-                            .foregroundColor(.green)
-                    } else {
-                        Image("edit")
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
         }
     }
 }
