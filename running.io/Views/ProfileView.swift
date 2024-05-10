@@ -321,6 +321,7 @@ struct CustomSegmentedPicker: View {
         Picker("", selection: $selectedTab) {
             ForEach(tabs, id: \.self) { tab in
                 Text(tab)
+                    .font(Font.custom("DelaGothicOne-Regular", size: 16)) // これがなぜかうまくいかない
                     .padding(.vertical, 10)
                     .padding(.horizontal, 20)
                     .background(self.selectedTab == tab ? Color.gray.opacity(0.2) : Color.white)
@@ -525,6 +526,7 @@ struct FriendRequestsView: View {
                 if filteredFriendRequests.isEmpty {
                     Text("受信したフレンドリクエストはありません")
                         .foregroundColor(.gray)
+                        .font(Font.custom("DelaGothicOne-Regular", size: 14))
                         .padding()
                 } else {
                     ForEach(0..<filteredFriendRequests.count, id: \.self) { index in
