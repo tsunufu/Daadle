@@ -8,33 +8,35 @@
 import Foundation
 import SwiftUI
 
-//struct BezierTopView: View {
-//    var body: some View {
-//        GeometryReader { geometry in
-//            Path { path in
-//                let width = geometry.size.width
-//                let height: CGFloat = 100  // Adjust height according to your design
-//                
-//                // Start point at top left
-//                path.move(to: CGPoint(x: 0, y: 0))
-//                
-//                // Define the points for the Bezier curve
-//                path.addLine(to: CGPoint(x: 0, y: height - 20))
-//                path.addCurve(to: CGPoint(x: width, y: height - 40),
-//                              control1: CGPoint(x: width * 0.3, y: height + 40),
-//                              control2: CGPoint(x: width * 0.7, y: height - 80))
-//                path.addLine(to: CGPoint(x: width, y: 0))
-//                path.addLine(to: CGPoint(x: 0, y: 0))
-//            }
-//            .fill(
-//                LinearGradient(gradient: Gradient(colors: [Color(hex: "#FFA24C"), Color(hex: "#FFD1A3")]),
-//                               startPoint: .leading,
-//                               endPoint: .trailing)
-//            )
-//        }
-//        .frame(height: 100)  // Set frame height same as the maximum height used in the path
-//    }
-//}
+struct BezierTopView: View {
+    var body: some View {
+        GeometryReader { geometry in
+            Path { path in
+                let width = geometry.size.width
+                let height: CGFloat = 160  // デザインに合わせて高さを調整
+
+                // 左上からスタート
+                path.move(to: CGPoint(x: 0, y: height))
+                
+                // ベジェ曲線のポイントを定義
+                path.addLine(to: CGPoint(x: 0, y: height))
+                path.addCurve(to: CGPoint(x: width, y: height * 0.5),
+                              control1: CGPoint(x: width * 0.3, y: height * 1.2),
+                              control2: CGPoint(x: width * 0.7, y: height * 0.3))
+                path.addLine(to: CGPoint(x: width, y: 0))
+                path.addLine(to: CGPoint(x: 0, y: 0))
+
+            }
+            .fill(
+                LinearGradient(gradient: Gradient(colors: [Color(hex: "#FFA24C"), Color(hex: "#FFD1A3")]),
+                               startPoint: .leading,
+                               endPoint: .trailing)
+            )
+        }
+        .frame(height: 160)  // パスで使用した最大の高さと同じフレーム高さを設定
+    }
+}
+
 
 struct ProfileView: View {
     @StateObject private var controller: ProfileController
@@ -65,46 +67,67 @@ struct ProfileView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            NavigationView {
+            NavigationStack {
                 ScrollView {
                     VStack(alignment: .center) {
                         
                         ZStack {
                             // Bezier curve background
-//                            BezierTopView()
-//                                .frame(width: geometry.size.width, height: 100)
-//                                .edgesIgnoringSafeArea(.top)
-//                                .zIndex(0) // Lower zIndex means it will be in the background
+                            BezierTopView()
+                                .frame(width: geometry.size.width, height: 100)
+                                .edgesIgnoringSafeArea(.top)
+                                .zIndex(0) // Lower zIndex means it will be in the background
+                                .padding(.top, 0)
+                            
 
                             // Profile image
-                            ProfileImageView(selectedImage: $selectedImage, imageUrl: $controller.imageUrl, isImagePickerPresented: $isImagePickerPresented)
+                            ProfileImageView(
+                                selectedImage: $selectedImage,
+                                imageUrl: $controller.imageUrl,
+                                isImagePickerPresented: $isImagePickerPresented,
+                                canEdit: canEditProfileImage
+                            )
                                 .zIndex(1) // Higher zIndex means it will be in the foreground
                         }
                         
                         // ユーザー名の変更UI（ポップアップのボタン）
-                        if showUsernameEditUI {
-                            Button(action: {
-                                draftUsername = controller.profile.userName
-                                isUsernamePopupPresented = true
-                            }) {
-                                HStack {
-                                    Text(controller.profile.userName)
-                                        .font(Font.custom("DelaGothicOne-Regular", size: 24))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(controller.userNameLoadFailed ? .red : .black)
-                                    
+                        HStack {
+                            Text(controller.profile.userName)
+                                .font(Font.custom("DelaGothicOne-Regular", size: 24))
+                                .fontWeight(.bold)
+                                .foregroundColor(controller.userNameLoadFailed ? .red : .black)
+
+                            if showUsernameEditUI {
+                                Button(action: {
+                                    draftUsername = controller.profile.userName
+                                    isUsernamePopupPresented = true
+                                }) {
                                     Image(systemName: "pencil")
                                         .foregroundColor(.gray)
                                 }
                             }
-                            .padding()
+                            
                         }
+                        .padding()
                         
+                        if isUsernamePopupPresented {
+        //                    Color.black.opacity(0.5)
+        //                        .edgesIgnoringSafeArea(.all)
+        //                        .blur(radius: 10)
+
+                            UsernameEditPopup(
+                                isPresented: $isUsernamePopupPresented,
+                                userName: $controller.profile.userName,
+                                draftUsername: $draftUsername,
+                                updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
+                            )
+                        }
                         // バッジ表示ビュー
                         BadgeView(userBadges: controller.profile.badges)
                         
                         // スコア表示ビュー
                         ScoreView(totalScore: controller.profile.totalScore, streaks: controller.profile.streaks, wins: controller.profile.wins)
+                        
                         
                         
                         // フレンドリスト
@@ -161,19 +184,6 @@ struct ProfileView: View {
                 }
             .background(Color(hex: "#FFF8F0"))
 
-                // Add the UsernameEditPopup overlay here
-                if isUsernamePopupPresented {
-                    Color.black.opacity(0.5)
-                        .edgesIgnoringSafeArea(.all)
-                        .blur(radius: 10)
-
-                    UsernameEditPopup(
-                        isPresented: $isUsernamePopupPresented,
-                        userName: $controller.profile.userName,
-                        draftUsername: $draftUsername,
-                        updateUsername: { controller.updateUsername(draftUsername: draftUsername) }
-                    )
-                }
             }
         }
         .edgesIgnoringSafeArea(.top)
@@ -250,7 +260,7 @@ struct UsernameEditPopup: View {
             .shadow(radius: 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.5))
+//        .background(Color.black.opacity(0.5))
         .ignoresSafeArea()
     }
 }
@@ -384,29 +394,6 @@ struct ScoreView: View {
         
 }
 
-//struct CustomSegmentedPicker: View {
-//    @Binding var selectedTab: String
-//    let tabs: [String]
-//
-//    var body: some View {
-//        Picker("", selection: $selectedTab) {
-//            ForEach(tabs, id: \.self) { tab in
-//                Text(tab)
-//                    .padding(.vertical, 10)
-//                    .padding(.horizontal, 20)
-//                    .background(Color(hex: self.selectedTab == tab ? "#DFD3C5" : "#FDFEF9"))
-//                    .foregroundColor(Color.black)
-//                    .cornerRadius(10)
-//            }
-//        }
-//        .pickerStyle(SegmentedPickerStyle())
-//        .modifier(CustomSegmentedControlStyle())
-//        .padding(.horizontal, 60)
-//        .background(Color(hex: "#FDFEF9"))
-//        .padding(.bottom, 30)
-//    }
-//}
-
 struct CustomSegmentedPicker: View {
     @Binding var selectedTab: String
     let tabs: [String]
@@ -419,7 +406,7 @@ struct CustomSegmentedPicker: View {
                     .padding(.horizontal, 10)
                     .background(self.selectedTab == tab ? Color(hex: "#DFD3C5") : Color(hex: "#FDFEF9"))
                     .foregroundColor(.black)
-                    .font(Font.custom("DelaGothicOne-Regular", size: 12))
+                    .font(Font.custom("DelaGothicOne-Regular", size: 10))
                     .cornerRadius(20)
                     .onTapGesture {
                         self.selectedTab = tab
