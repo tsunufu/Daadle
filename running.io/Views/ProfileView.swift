@@ -34,14 +34,13 @@ struct ProfileView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .center) {
                     // プロフィール画像
                     ProfileImageView(selectedImage: $selectedImage, imageUrl: $controller.imageUrl, isImagePickerPresented: $isImagePickerPresented)
 
                     // ユーザー名の変更UI（ポップアップのボタン）
-                    
                     HStack {
                         Text(controller.profile.userName)
                             .font(Font.custom("DelaGothicOne-Regular", size: 24))
@@ -59,7 +58,6 @@ struct ProfileView: View {
                         }
                     }
                     .padding()
-
 
                     // バッジ表示ビュー
                     BadgeView(userBadges: controller.profile.badges)
