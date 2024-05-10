@@ -165,7 +165,7 @@ struct UsernameEditPopup: View {
                             isPresented = false
                         }) {
                             Text("キャンセル")
-                                .foregroundColor(.red)
+                                .foregroundColor(.black)
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 16)
                                 .background(Color.gray.opacity(0.2))
@@ -180,13 +180,12 @@ struct UsernameEditPopup: View {
                             isPresented = false
                         }) {
                             Text("保存")
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 16)
-                                .background(Color.blue)
+                                .background(Color(red: 0.87, green: 0.83, blue: 0.77))
                                 .cornerRadius(10)
-                                .font(Font.custom("DelaGothicOne-Regular", size: 16
-                                                 ))
+                                .font(Font.custom("DelaGothicOne-Regular", size: 16))
                         }
                     }
                     .padding(.horizontal, 20)
