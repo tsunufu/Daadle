@@ -33,10 +33,10 @@ struct BottomCardView: View {
             
             HStack {
                 VStack(alignment: .leading) {
-                    Text("シーズン1")
+                    Text("新緑の祝典")
                         .font(Font.custom("DelaGothicOne-Regular", size: 20))
                         .fontWeight(.bold)
-                    Text("開催期間 2/1~3/31")
+                    Text("開催期間 4/30~5/31")
                         .font(Font.custom("DelaGothicOne-Regular", size: 12))
                         .foregroundColor(.gray)
                     Text("Score: \(areaScore != nil ? "\(Int(areaScore!))" : "null")")
