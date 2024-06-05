@@ -132,17 +132,17 @@ struct FullScreenMapView: View {
     var showFriendSearchUI: Bool = true
     var showCustomSegmentedPicker: Bool = true
     var showBlockButton: Bool = true
+    
+    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            MapView(locationManager: locationManager, userUID: userUID)
-                .edgesIgnoringSafeArea(.all)
-                .onChange(of: locationManager.locations.count) { newCount in
-                    if newCount != locationsCount {
-                        locationsCount = newCount
-                        updatePolygonScore()
-                    }
+            Map(position: $position)
+                .mapControls {
+                    MapPitchToggle()
+                    MapUserLocationButton()
                 }
+                .mapStyle(.standard(elevation: .realistic))
 
             VStack {
                 HStack {
@@ -215,6 +215,7 @@ struct FullScreenMapView: View {
         }
         .onChange(of: locationManager.isAlwaysAuthorized) { isAuthorized in
             showWarningView = !isAuthorized
+            
         }
     }
     
