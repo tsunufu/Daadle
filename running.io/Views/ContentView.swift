@@ -147,6 +147,8 @@ struct FullScreenMapView: View {
 //    )
     @State private var position: MapCameraPosition = .automatic
     @State private var isUserInteracting = false
+    
+    @State private var isPressed = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -172,11 +174,6 @@ struct FullScreenMapView: View {
 //                    MapPitchToggle()
 //                    MapUserLocationButton()
 //                }
-//                .simultaneousGesture(
-//                    DragGesture(minimumDistance: 0, coordinateSpace: .local)
-//                        .onChanged { _ in isUserInteracting = true }
-//                        .onEnded { _ in isUserInteracting = false }
-//                )
                 .mapStyle(.standard(elevation: .realistic))
                 .onAppear {
                     if let userLocation = locationManager.location {
@@ -186,13 +183,18 @@ struct FullScreenMapView: View {
                     }
                 }
                 .onChange(of: locationManager.location) { newLocation in
-                    if let location = newLocation, !isUserInteracting {
+                    if let location = newLocation, !isPressed {
                         withAnimation(.linear(duration: 0.5)) { // アニメーションを追加
                             let camera = MapCamera(centerCoordinate: location.coordinate, distance: 400, heading: 242, pitch: 40)
                             position = .camera(camera)
                         }
                     }
                 }
+                .gesture(
+                    DragGesture().onChanged { _ in isPressed = true }
+                                .onEnded { _ in isPressed = false }
+                )
+            
 
             VStack {
                 HStack {
@@ -238,9 +240,31 @@ struct FullScreenMapView: View {
                 Spacer()
             }
 
-            BottomCardView(areaScore: areaScore, userUID: userUID)
-                .offset(y: 50)
-                .edgesIgnoringSafeArea(.bottom)
+            VStack { // VStackでボタンとカードビューをまとめて配置
+                Spacer() // 画面の下部に要素を押し下げる
+                HStack {
+                    Button(action: {
+                        isPressed = false
+                        if let location = locationManager.location {
+                            withAnimation(.linear(duration: 0.5)) {
+                                let camera = MapCamera(centerCoordinate: location.coordinate, distance: 400, heading: 242, pitch: 40)
+                                position = .camera(camera)
+                            }
+                        }
+                    }) {
+                        Image("currentButton")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 100, height: 100)
+                    }
+                    .padding(.leading, 20) // 左端からのパディング
+                    .padding(.bottom, -80)
+                    Spacer() // 残りのスペースを埋める
+                }
+                BottomCardView(areaScore: areaScore, userUID: userUID)
+                    .offset(y: 50)
+                    .edgesIgnoringSafeArea(.bottom)
+            }
             
             if userSession.showBadgeView {
                 BadgeGetView(showBadgeView: $userSession.showBadgeView)
@@ -296,4 +320,16 @@ struct FullScreenMapView: View {
             }
         }
     }
+}
+
+struct SBButtonStyle: ButtonStyle {
+  let onTouchDown: () -> Void
+  let onTouchUp: () -> Void
+  
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .onChange(of: configuration.isPressed) { $0 ? onTouchDown() : onTouchUp() }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .contentShape(Rectangle())
+  }
 }
