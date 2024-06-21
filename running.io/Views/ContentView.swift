@@ -133,18 +133,6 @@ struct FullScreenMapView: View {
     var showCustomSegmentedPicker: Bool = true
     var showBlockButton: Bool = true
     
-//    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
-//    @State private var position: MapCameraPosition = .camera(
-//        MapCamera(
-//            centerCoordinate: CLLocationCoordinate2D(
-//                latitude: 42.360431,
-//                longitude: -71.055930
-//            ),
-//            distance: 200,
-//            heading: 242,
-//            pitch: 40
-//        )
-//    )
     @State private var position: MapCameraPosition = .automatic
     @State private var isUserInteracting = false
     
@@ -153,27 +141,37 @@ struct FullScreenMapView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             Map(position: $position, interactionModes: .all) {
+                MapPolygon(coordinates: locationManager.locations)
+                    .foregroundStyle(.orange.opacity(0.6))
+                ForEach(Array(locationManager.userLocationsHistory.keys), id: \.self) { userId in
+                    if let locations = locationManager.userLocationsHistory[userId], !locations.isEmpty {
+                        MapPolygon(coordinates: locations)
+                            .foregroundStyle(Color.blue.opacity(0.5))
+                    }
+                }
+
                 UserAnnotation(anchor: .center) { userLocation in
                     VStack {
-                        Image(systemName: "arrow.up")
-                            .rotationEffect(.degrees(userLocation.heading?.magneticHeading ?? 0))
-                            .foregroundColor(.blue)
-                        Circle()
-                            .foregroundStyle(.blue)
-                            .padding(2)
-                            .background(
-                                Circle()
-                                    .fill(.white)
-                            )
-                        Text("me")
+                        if let imageUrl = profileImageUrl, let url = URL(string: imageUrl) {
+                            RemoteImageView(url: url) // カスタムリモート画像ビューを使用
+                                .scaledToFit()
+                                .frame(width: 40, height: 40) // サイズは適宜調整
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                .shadow(radius: 3)
+                        } else {
+                            Image(systemName: "person.circle.fill") // プロフィール画像がない場合のデフォルト
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 40, height: 40)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                .shadow(radius: 3)
+                        }
                     }
                 }
             }
-            
-//                .mapControls {
-//                    MapPitchToggle()
-//                    MapUserLocationButton()
-//                }
                 .mapStyle(.standard(elevation: .realistic))
                 .onAppear {
                     if let userLocation = locationManager.location {
@@ -181,6 +179,7 @@ struct FullScreenMapView: View {
                         let camera = MapCamera(centerCoordinate: userLocation.coordinate, distance: 200, heading: 242, pitch: 40)
                         position = .camera(camera)
                     }
+//                    fetchFriendsLocations()
                 }
                 .onChange(of: locationManager.location) { newLocation in
                     if let location = newLocation, !isPressed {
@@ -189,6 +188,7 @@ struct FullScreenMapView: View {
                             position = .camera(camera)
                         }
                     }
+                    self.updatePolygonScore()
                 }
                 .gesture(
                     DragGesture().onChanged { _ in isPressed = true }
@@ -305,10 +305,44 @@ struct FullScreenMapView: View {
             if let error = error {
                 print("Error saving score: \(error.localizedDescription)")
             } else {
-                print("Score saved successfully.")
+//                print("Score saved successfully.")
             }
         }
     }
+    
+//    private func fetchFriendsLocations() {
+//        let friendsRef = Database.database().reference(withPath: "users/\(userUID)/friends")
+//        friendsRef.observeSingleEvent(of: .value) { snapshot in
+//            var friendsUIDs = [String]()
+//            for child in snapshot.children {
+//                if let childSnapshot = child as? DataSnapshot {
+//                    friendsUIDs.append(childSnapshot.key)
+//                }
+//            }
+//            friendsUIDs.append(self.userUID)  // 自分自身を追加
+//            self.observeLocationsForFriends(friendsUIDs)
+//        }
+//    }
+//
+//    private func observeLocationsForFriends(_ friendUIDs: [String]) {
+//        let usersRef = Database.database().reference(withPath: "users")
+//        for uid in friendUIDs {
+//            usersRef.child(uid).child("locations").observe(.value) { snapshot in
+//                var locations = [CLLocationCoordinate2D]()
+//                for locationSnapshot in snapshot.children {
+//                    if let locationDict = locationSnapshot as? DataSnapshot,
+//                       let lat = locationDict.childSnapshot(forPath: "latitude").value as? Double,
+//                       let lon = locationDict.childSnapshot(forPath: "longitude").value as? Double {
+//                        locations.append(CLLocationCoordinate2D(latitude: lat, longitude: lon))
+//                    }
+//                }
+//                DispatchQueue.main.async {
+//                    locationManager.userLocationsHistory[uid] = locations
+//                }
+//            }
+//        }
+//    }
+
     
     func fetchUserProfileImage() {
         let imageUrlRef = Database.database().reference(withPath: "users/\(userUID)/profileImageUrl")
@@ -320,16 +354,4 @@ struct FullScreenMapView: View {
             }
         }
     }
-}
-
-struct SBButtonStyle: ButtonStyle {
-  let onTouchDown: () -> Void
-  let onTouchUp: () -> Void
-  
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .onChange(of: configuration.isPressed) { $0 ? onTouchDown() : onTouchUp() }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .contentShape(Rectangle())
-  }
 }

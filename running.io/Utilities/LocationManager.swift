@@ -89,6 +89,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         var coordinates = userLocationsHistory[userId] ?? []
         coordinates.append(newCoordinate) // 新しい座標を追加
         userLocationsHistory[userId] = coordinates // 更新された配列を保存
+//        print("User \(userId) has locations: \(coordinates)")
     }
 
 
@@ -143,6 +144,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
 
         return true
     }
+    
+    
 }
 
 extension LocationManager {
