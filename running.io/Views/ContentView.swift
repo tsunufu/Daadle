@@ -133,16 +133,66 @@ struct FullScreenMapView: View {
     var showCustomSegmentedPicker: Bool = true
     var showBlockButton: Bool = true
     
-    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
+//    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
+//    @State private var position: MapCameraPosition = .camera(
+//        MapCamera(
+//            centerCoordinate: CLLocationCoordinate2D(
+//                latitude: 42.360431,
+//                longitude: -71.055930
+//            ),
+//            distance: 200,
+//            heading: 242,
+//            pitch: 40
+//        )
+//    )
+    @State private var position: MapCameraPosition = .automatic
+    @State private var isUserInteracting = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Map(position: $position)
-                .mapControls {
-                    MapPitchToggle()
-                    MapUserLocationButton()
+            Map(position: $position, interactionModes: .all) {
+                UserAnnotation(anchor: .center) { userLocation in
+                    VStack {
+                        Image(systemName: "arrow.up")
+                            .rotationEffect(.degrees(userLocation.heading?.magneticHeading ?? 0))
+                            .foregroundColor(.blue)
+                        Circle()
+                            .foregroundStyle(.blue)
+                            .padding(2)
+                            .background(
+                                Circle()
+                                    .fill(.white)
+                            )
+                        Text("me")
+                    }
                 }
+            }
+            
+//                .mapControls {
+//                    MapPitchToggle()
+//                    MapUserLocationButton()
+//                }
+//                .simultaneousGesture(
+//                    DragGesture(minimumDistance: 0, coordinateSpace: .local)
+//                        .onChanged { _ in isUserInteracting = true }
+//                        .onEnded { _ in isUserInteracting = false }
+//                )
                 .mapStyle(.standard(elevation: .realistic))
+                .onAppear {
+                    if let userLocation = locationManager.location {
+                        print("---------------------")
+                        let camera = MapCamera(centerCoordinate: userLocation.coordinate, distance: 200, heading: 242, pitch: 40)
+                        position = .camera(camera)
+                    }
+                }
+                .onChange(of: locationManager.location) { newLocation in
+                    if let location = newLocation, !isUserInteracting {
+                        withAnimation(.linear(duration: 0.5)) { // アニメーションを追加
+                            let camera = MapCamera(centerCoordinate: location.coordinate, distance: 400, heading: 242, pitch: 40)
+                            position = .camera(camera)
+                        }
+                    }
+                }
 
             VStack {
                 HStack {
