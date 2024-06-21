@@ -132,17 +132,69 @@ struct FullScreenMapView: View {
     var showFriendSearchUI: Bool = true
     var showCustomSegmentedPicker: Bool = true
     var showBlockButton: Bool = true
+    
+    @State private var position: MapCameraPosition = .automatic
+    @State private var isUserInteracting = false
+    
+    @State private var isPressed = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            MapView(locationManager: locationManager, userUID: userUID)
-                .edgesIgnoringSafeArea(.all)
-                .onChange(of: locationManager.locations.count) { newCount in
-                    if newCount != locationsCount {
-                        locationsCount = newCount
-                        updatePolygonScore()
+            Map(position: $position, interactionModes: .all) {
+                MapPolygon(coordinates: locationManager.locations)
+                    .foregroundStyle(.orange.opacity(0.6))
+                ForEach(Array(locationManager.userLocationsHistory.keys), id: \.self) { userId in
+                    if let locations = locationManager.userLocationsHistory[userId], !locations.isEmpty {
+                        MapPolygon(coordinates: locations)
+                            .foregroundStyle(Color.blue.opacity(0.5))
                     }
                 }
+
+                UserAnnotation(anchor: .center) { userLocation in
+                    VStack {
+                        if let imageUrl = profileImageUrl, let url = URL(string: imageUrl) {
+                            RemoteImageView(url: url) // カスタムリモート画像ビューを使用
+                                .scaledToFit()
+                                .frame(width: 40, height: 40) // サイズは適宜調整
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                .shadow(radius: 3)
+                        } else {
+                            Image(systemName: "person.circle.fill") // プロフィール画像がない場合のデフォルト
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 40, height: 40)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                .shadow(radius: 3)
+                        }
+                    }
+                }
+            }
+                .mapStyle(.standard(elevation: .realistic))
+                .onAppear {
+                    if let userLocation = locationManager.location {
+                        print("---------------------")
+                        let camera = MapCamera(centerCoordinate: userLocation.coordinate, distance: 200, heading: 242, pitch: 40)
+                        position = .camera(camera)
+                    }
+//                    fetchFriendsLocations()
+                }
+                .onChange(of: locationManager.location) { newLocation in
+                    if let location = newLocation, !isPressed {
+                        withAnimation(.linear(duration: 0.5)) { // アニメーションを追加
+                            let camera = MapCamera(centerCoordinate: location.coordinate, distance: 400, heading: 242, pitch: 40)
+                            position = .camera(camera)
+                        }
+                    }
+                    self.updatePolygonScore()
+                }
+                .gesture(
+                    DragGesture().onChanged { _ in isPressed = true }
+                                .onEnded { _ in isPressed = false }
+                )
+            
 
             VStack {
                 HStack {
@@ -188,9 +240,31 @@ struct FullScreenMapView: View {
                 Spacer()
             }
 
-            BottomCardView(areaScore: areaScore, userUID: userUID)
-                .offset(y: 50)
-                .edgesIgnoringSafeArea(.bottom)
+            VStack { // VStackでボタンとカードビューをまとめて配置
+                Spacer() // 画面の下部に要素を押し下げる
+                HStack {
+                    Button(action: {
+                        isPressed = false
+                        if let location = locationManager.location {
+                            withAnimation(.linear(duration: 0.5)) {
+                                let camera = MapCamera(centerCoordinate: location.coordinate, distance: 400, heading: 242, pitch: 40)
+                                position = .camera(camera)
+                            }
+                        }
+                    }) {
+                        Image("currentButton")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 100, height: 100)
+                    }
+                    .padding(.leading, 20) // 左端からのパディング
+                    .padding(.bottom, -80)
+                    Spacer() // 残りのスペースを埋める
+                }
+                BottomCardView(areaScore: areaScore, userUID: userUID)
+                    .offset(y: 50)
+                    .edgesIgnoringSafeArea(.bottom)
+            }
             
             if userSession.showBadgeView {
                 BadgeGetView(showBadgeView: $userSession.showBadgeView)
@@ -215,6 +289,7 @@ struct FullScreenMapView: View {
         }
         .onChange(of: locationManager.isAlwaysAuthorized) { isAuthorized in
             showWarningView = !isAuthorized
+            
         }
     }
     
@@ -230,10 +305,44 @@ struct FullScreenMapView: View {
             if let error = error {
                 print("Error saving score: \(error.localizedDescription)")
             } else {
-                print("Score saved successfully.")
+//                print("Score saved successfully.")
             }
         }
     }
+    
+//    private func fetchFriendsLocations() {
+//        let friendsRef = Database.database().reference(withPath: "users/\(userUID)/friends")
+//        friendsRef.observeSingleEvent(of: .value) { snapshot in
+//            var friendsUIDs = [String]()
+//            for child in snapshot.children {
+//                if let childSnapshot = child as? DataSnapshot {
+//                    friendsUIDs.append(childSnapshot.key)
+//                }
+//            }
+//            friendsUIDs.append(self.userUID)  // 自分自身を追加
+//            self.observeLocationsForFriends(friendsUIDs)
+//        }
+//    }
+//
+//    private func observeLocationsForFriends(_ friendUIDs: [String]) {
+//        let usersRef = Database.database().reference(withPath: "users")
+//        for uid in friendUIDs {
+//            usersRef.child(uid).child("locations").observe(.value) { snapshot in
+//                var locations = [CLLocationCoordinate2D]()
+//                for locationSnapshot in snapshot.children {
+//                    if let locationDict = locationSnapshot as? DataSnapshot,
+//                       let lat = locationDict.childSnapshot(forPath: "latitude").value as? Double,
+//                       let lon = locationDict.childSnapshot(forPath: "longitude").value as? Double {
+//                        locations.append(CLLocationCoordinate2D(latitude: lat, longitude: lon))
+//                    }
+//                }
+//                DispatchQueue.main.async {
+//                    locationManager.userLocationsHistory[uid] = locations
+//                }
+//            }
+//        }
+//    }
+
     
     func fetchUserProfileImage() {
         let imageUrlRef = Database.database().reference(withPath: "users/\(userUID)/profileImageUrl")
