@@ -194,6 +194,9 @@ struct FullScreenMapView: View {
                     DragGesture().onChanged { _ in isPressed = true }
                                 .onEnded { _ in isPressed = false }
                 )
+                .onDisappear {
+                    locationManager.saveLocationsOnLocal()
+                }
             
 
             VStack {

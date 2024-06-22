@@ -10,6 +10,7 @@ import CoreLocation
 import MapKit
 import FirebaseDatabase
 import FirebaseAuth
+import UIKit 
 
 class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var location: CLLocation?
@@ -106,6 +107,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         locationManager.startUpdatingLocation()
         fetchOtherUsersLocation()
         fetchOtherUsersCurrentLocation()
+        loadLocationsOnLocal()
+        NotificationCenter.default.addObserver(self, selector: #selector(saveLocationsOnLocal), name: UIApplication.willResignActiveNotification, object: nil)
     }
     
     private func checkInitialAuthorizationStatus() {
@@ -145,6 +148,21 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         return true
     }
     
+    @objc func saveLocationsOnLocal() {
+        let encodedData = try? JSONEncoder().encode(locations.map { [$0.latitude, $0.longitude] })
+        UserDefaults.standard.set(encodedData, forKey: "savedPolygon")
+    }
+
+    func loadLocationsOnLocal() {
+        if let data = UserDefaults.standard.data(forKey: "savedPolygon"),
+           let decodedCoordinates = try? JSONDecoder().decode([[Double]].self, from: data) {
+            locations = decodedCoordinates.map { CLLocationCoordinate2D(latitude: $0[0], longitude: $0[1]) }
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
 }
 
