@@ -21,71 +21,79 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var userLocationsHistory: [String: [CLLocationCoordinate2D]] = [:]
     @Published var isAlwaysAuthorized: Bool = false
     var currentUserID: String? = Auth.auth().currentUser?.uid
+    var lastDatabaseUpdate: Date?
         
     var ref: DatabaseReference = Database.database().reference()
     
-    func fetchOtherUsersLocation() {
-        let dbRef = Database.database().reference()
-        let currentUserId = ""
+    func fetchFriendsLocations() {
+            // フレンドリストを取得
+        guard let currentUserID = Auth.auth().currentUser?.uid else {
+            print("Error: Current user ID is nil")
+            return
+        }
 
-        dbRef.child("users").observe(.value, with: { snapshot in
-            guard let usersDict = snapshot.value as? [String: AnyObject] else {
-                DispatchQueue.main.async {
-//                    print("エラー: データをデコードできませんでした")
-                }
+        print("Current user ID: \(currentUserID)")
+        ref.child("users/\(currentUserID)/friends").observeSingleEvent(of: .value) { [weak self] snapshot in
+            print("Snapshot value: \(snapshot.value)")
+            guard let self = self, let friendsDict = snapshot.value as? [String: Bool] else {
+                print("Error: Could not decode friends data")
                 return
             }
+                
+                // フレンドリストのユーザーIDを配列に保存
+                let friendUIDs = Array(friendsDict.keys)
 
-            for (key, value) in usersDict where key != currentUserId {
-                if let locationDict = value["locations"] as? [String: AnyObject],
+                // フレンドの位置情報を取得
+                self.fetchUserLocations(friendUIDs: friendUIDs)
+            }
+        }
+
+    private func fetchUserLocations(friendUIDs: [String]) {
+        ref.child("users").observeSingleEvent(of: .value) { [weak self] snapshot in
+            guard let self = self, let usersDict = snapshot.value as? [String: AnyObject] else {
+                print("Error: Could not decode users data")
+                return
+            }
+            
+            var newLocations: [String: [String: Any]] = [:]
+            for userId in friendUIDs {
+                if let userValue = usersDict[userId],
+                   let locationDict = userValue["locations"] as? [String: AnyObject],
                    let latitude = locationDict["latitude"] as? Double,
                    let longitude = locationDict["longitude"] as? Double {
-                    let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-                    
-                    // 新しい座標をユーザーの位置情報履歴に追加する処理
-                    DispatchQueue.main.async {
-                        self.updateLocation(for: key, with: coordinate)
-                    }
+                    newLocations[userId] = ["latitude": latitude, "longitude": longitude]
+                    print("Updated location for user \(userId): \(latitude), \(longitude)")
                 }
             }
-        }) { error in
+            
             DispatchQueue.main.async {
-//                print(error.localizedDescription)
+                self.allUserLocations = newLocations
+                print("All updated user locations: \(self.allUserLocations)")
             }
         }
     }
     
-    func fetchOtherUsersCurrentLocation() {
-            let dbRef = Database.database().reference()
-            let userId = ""
-
-            dbRef.child("users").observe(.value, with: { snapshot in
-                guard let usersDict = snapshot.value as? [String: AnyObject] else {
-                    DispatchQueue.main.async {
-//                        print("エラー: データをデコードできませんでした")
-                    }
-                    return
-                }
-
-                var newLocations: [String: [String: Any]] = [:]
-                for (key, value) in usersDict where key != userId {
-                    if let locationDict = value["locations"] as? [String: AnyObject],
-                       let latitude = locationDict["latitude"] as? Double,
-                       let longitude = locationDict["longitude"] as? Double {
-//                        print("ユーザー: \(key) - 緯度: \(latitude), 経度: \(longitude)")
-                        newLocations[key] = ["latitude": latitude, "longitude": longitude]
-                    }
-                }
-                DispatchQueue.main.async {
-                    self.allUserLocations = newLocations
-                }
-            }) { error in
-                DispatchQueue.main.async {
-//                    print(error.localizedDescription)
-                }
-            }
+    func writeLocationToDatabase(location: CLLocation) {
+        guard let userID = Auth.auth().currentUser?.uid else {
+            print("Error: User ID is nil")
+            return
         }
 
+        let locationData = [
+            "latitude": location.coordinate.latitude,
+            "longitude": location.coordinate.longitude,
+            "timestamp": Int(location.timestamp.timeIntervalSince1970)  // タイムスタンプも保存
+        ] as [String : Any]
+
+        ref.child("users/\(userID)/locations").setValue(locationData) { error, _ in
+            if let error = error {
+                print("Error writing location to Firebase: \(error.localizedDescription)")
+            } else {
+                print("Successfully wrote location to Firebase")
+            }
+        }
+    }
+    
     func updateLocation(for userId: String, with newCoordinate: CLLocationCoordinate2D) {
         var coordinates = userLocationsHistory[userId] ?? []
         coordinates.append(newCoordinate) // 新しい座標を追加
@@ -105,8 +113,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.startUpdatingLocation()
-        fetchOtherUsersLocation()
-        fetchOtherUsersCurrentLocation()
+        fetchFriendsLocations()
         loadLocationsOnLocal()
         NotificationCenter.default.addObserver(self, selector: #selector(saveLocationsOnLocal), name: UIApplication.willResignActiveNotification, object: nil)
     }
@@ -136,6 +143,15 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             self.location = newLocation
             self.locations.append(center)
             self.region = MKCoordinateRegion(center: center, latitudinalMeters: 1000.0, longitudinalMeters: 1000.0)
+            
+            // 30秒ごとにデータベースに書き込む
+            let now = Date()
+            if let lastUpdate = lastDatabaseUpdate, now.timeIntervalSince(lastUpdate) < 30 {
+                return
+            }
+            
+            writeLocationToDatabase(location: newLocation)
+            lastDatabaseUpdate = now
         }
     }
     
