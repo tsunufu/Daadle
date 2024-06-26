@@ -195,7 +195,7 @@ struct FullScreenMapView: View {
                                 .onEnded { _ in isPressed = false }
                 )
                 .onDisappear {
-                    locationManager.saveLocationsOnLocal()
+                    locationManager.saveLocationsToCoreData()
                 }
             
 

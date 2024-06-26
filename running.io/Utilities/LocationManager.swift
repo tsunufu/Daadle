@@ -11,6 +11,7 @@ import MapKit
 import FirebaseDatabase
 import FirebaseAuth
 import UIKit 
+import CoreData
 
 class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     @Published var location: CLLocation?
@@ -134,9 +135,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.startUpdatingLocation()
         fetchFriendsLocations()
-        loadLocationsOnLocal()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(saveLocationsOnLocal), name: UIApplication.willResignActiveNotification, object: nil)
+        loadLocationsFromCoreData()
+
     }
     
     private func checkInitialAuthorizationStatus() {
@@ -174,6 +174,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
             writeLocationToDatabase(location: newLocation)
             saveLocationHistoryToFirebase()
             fetchFriendsLocations()
+            saveLocationsToCoreData()
+            loadLocationsFromCoreData()
             lastDatabaseUpdate = now
         }
     }
@@ -187,21 +189,50 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         return true
     }
     
-    @objc func saveLocationsOnLocal() {
-        let encodedData = try? JSONEncoder().encode(locations.map { [$0.latitude, $0.longitude] })
-        UserDefaults.standard.set(encodedData, forKey: "savedPolygon")
-    }
+    
+    func saveLocationsToCoreData() {
+        let context = PersistenceController.shared.container.viewContext
 
-    func loadLocationsOnLocal() {
-        if let data = UserDefaults.standard.data(forKey: "savedPolygon"),
-           let decodedCoordinates = try? JSONDecoder().decode([[Double]].self, from: data) {
-            locations = decodedCoordinates.map { CLLocationCoordinate2D(latitude: $0[0], longitude: $0[1]) }
+        // 既存のデータを削除する
+        let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "Location")
+        let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        _ = try? context.execute(batchDeleteRequest)
+
+        // 新しいデータを保存
+        for coordinate in locations {
+            let newLocation = Location(context: context)
+            newLocation.latitude = coordinate.latitude
+            newLocation.longitude = coordinate.longitude
+        }
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save locations: \(error)")
         }
     }
     
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+    @objc func loadLocationsFromCoreData() {
+        let context = PersistenceController.shared.container.viewContext
+        let fetchRequest: NSFetchRequest<Location> = Location.fetchRequest()
+
+        do {
+            let locationsFromCoreData = try context.fetch(fetchRequest)
+            locations = locationsFromCoreData.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+            
+            if locationsFromCoreData.isEmpty {
+                print("No locations were loaded from CoreData.")
+            } else {
+                print("Loaded \(locationsFromCoreData.count) locations from CoreData:")
+                for location in locationsFromCoreData {
+                    print("Latitude: \(location.latitude), Longitude: \(location.longitude)")
+                }
+            }
+        } catch {
+            print("Failed to fetch locations: \(error)")
+        }
     }
+
     
 }
 
