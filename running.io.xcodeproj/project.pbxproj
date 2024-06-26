@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A1CE3242C2BB6CE002CA07D /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 2A1CE3222C2BB6CE002CA07D /* Model.xcdatamodeld */; };
+		2A1CE3272C2BBCB0002CA07D /* Location+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1CE3252C2BBCB0002CA07D /* Location+CoreDataClass.swift */; };
+		2A1CE3282C2BBCB0002CA07D /* Location+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1CE3262C2BBCB0002CA07D /* Location+CoreDataProperties.swift */; };
+		2A1CE32A2C2BBCED002CA07D /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1CE3292C2BBCED002CA07D /* Persistence.swift */; };
 		2A2DB6E32B882ED60058044A /* UserLocationAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */; };
 		2A2DB6E52B8834C10058044A /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2DB6E42B8834C10058044A /* UserLocation.swift */; };
 		2A4503392BE5EDEA00FD12CA /* WarningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4503382BE5EDEA00FD12CA /* WarningView.swift */; };
@@ -35,6 +39,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2A1CE3232C2BB6CE002CA07D /* LocationModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = LocationModel.xcdatamodel; sourceTree = "<group>"; };
+		2A1CE3252C2BBCB0002CA07D /* Location+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location+CoreDataClass.swift"; sourceTree = "<group>"; };
+		2A1CE3262C2BBCB0002CA07D /* Location+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		2A1CE3292C2BBCED002CA07D /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		2A2DB6E22B882ED60058044A /* UserLocationAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocationAnnotation.swift; sourceTree = "<group>"; };
 		2A2DB6E42B8834C10058044A /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
 		2A4503382BE5EDEA00FD12CA /* WarningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarningView.swift; sourceTree = "<group>"; };
@@ -95,6 +103,9 @@
 		2AD260732B7C433E000265A4 /* running.io */ = {
 			isa = PBXGroup;
 			children = (
+				2A1CE3252C2BBCB0002CA07D /* Location+CoreDataClass.swift */,
+				2A1CE3262C2BBCB0002CA07D /* Location+CoreDataProperties.swift */,
+				2A1CE3222C2BB6CE002CA07D /* Model.xcdatamodeld */,
 				F5199D212BE9220D00F6B782 /* Controllers */,
 				F5C72EED2BC9292200BE0843 /* Models */,
 				F5C72EEC2BC9291100BE0843 /* Resources */,
@@ -104,6 +115,7 @@
 				2AD260822B7CCA24000265A4 /* running-io-Info.plist */,
 				2AD260742B7C433E000265A4 /* running_ioApp.swift */,
 				2AD2607A2B7C433F000265A4 /* Preview Content */,
+				2A1CE3292C2BBCED002CA07D /* Persistence.swift */,
 			);
 			path = running.io;
 			sourceTree = "<group>";
@@ -269,12 +281,15 @@
 				F5BBD22D2B86FE7500593866 /* ProfileView.swift in Sources */,
 				2A2DB6E32B882ED60058044A /* UserLocationAnnotation.swift in Sources */,
 				2AD260772B7C433E000265A4 /* ContentView.swift in Sources */,
+				2A1CE32A2C2BBCED002CA07D /* Persistence.swift in Sources */,
 				F5BBD2232B85138200593866 /* UserSession.swift in Sources */,
+				2A1CE3282C2BBCB0002CA07D /* Location+CoreDataProperties.swift in Sources */,
 				F5BBD22B2B86E08900593866 /* OnBoardingView.swift in Sources */,
 				2A9BBD2F2BDF86D500E78656 /* BadgeGetView.swift in Sources */,
 				2AD260862B7DBF88000265A4 /* MapView.swift in Sources */,
 				F5199D232BE9221900F6B782 /* ProfileController.swift in Sources */,
 				F5BBD2322B88421300593866 /* ImageLoader.swift in Sources */,
+				2A1CE3272C2BBCB0002CA07D /* Location+CoreDataClass.swift in Sources */,
 				F5199D252BE9223500F6B782 /* ProfileModel.swift in Sources */,
 				F5861F782BDB247300FD5EE4 /* FriendProfileView.swift in Sources */,
 				2AD260752B7C433E000265A4 /* running_ioApp.swift in Sources */,
@@ -282,6 +297,7 @@
 				2A4503392BE5EDEA00FD12CA /* WarningView.swift in Sources */,
 				F5BBD2342B88460400593866 /* RemoteImageView.swift in Sources */,
 				F5BBD2252B851F6400593866 /* TitleView.swift in Sources */,
+				2A1CE3242C2BB6CE002CA07D /* Model.xcdatamodeld in Sources */,
 				2A2DB6E52B8834C10058044A /* UserLocation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -535,6 +551,19 @@
 			productName = FirebaseDatabase;
 		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin XCVersionGroup section */
+		2A1CE3222C2BB6CE002CA07D /* Model.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				2A1CE3232C2BB6CE002CA07D /* LocationModel.xcdatamodel */,
+			);
+			currentVersion = 2A1CE3232C2BB6CE002CA07D /* LocationModel.xcdatamodel */;
+			path = Model.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 2AD260692B7C433E000265A4 /* Project object */;
 }
